@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "personal-ai-workbench-api"
+version = "0.1.0"
+description = "Shared FastAPI service for Personal AI Workbench"
+readme = "README.md"
+requires-python = ">=3.15,<3.16"
+dependencies = [
+    "fastapi>=0.120,<1",
+    "pydantic>=2.14,<3",
+    "uvicorn[standard]>=0.38,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx2>=2,<3",
+    "pytest>=8.4,<10",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
