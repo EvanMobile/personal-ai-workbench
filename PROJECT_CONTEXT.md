@@ -12,6 +12,13 @@
 
 信息冲突时，最新明确的 Owner 决策优先；代码和可重复运行结果说明实现状态；本存档记录经核对后的上下文；历史讨论和 Agent 建议只作为参考。若实现事实与架构意图冲突，应同时记录两者并提交审查，不能静默改写其中一方。
 
+## 治理文档入口与当前施工边界
+
+- **DECIDED**：当前工程周期以 Project Owner 批准的 **Frozen Engineering Scope v1.0** 为施工边界；七个施工模块、产品级工程要求、最终交付标准和排除范围见 [`docs/governance/frozen-engineering-scope-v1.0.md`](docs/governance/frozen-engineering-scope-v1.0.md)。增加范围须经 Project Owner 明确批准。
+- **DECIDED**：协作遵循 **Human-Owned Engineering, AI-Assisted Implementation**；职责、Knowledge Mastery、Learning Gate 和 Milestone Capability Review 见 [`docs/governance/human-owned-engineering.md`](docs/governance/human-owned-engineering.md)。
+- **CONFIRMED**：Knowledge Mastery L1-L4 与本文件的 L1/L2/L3 Minimum Sufficient Review（CR Policy）是两套不同制度；前者评估人的知识能力，后者定义代码审查深度。
+- **CONFIRMED**：Frozen Scope v1.0 已按 Project Owner 提供的完整批准文本记录于治理文档。施工不得自行缩减、重新解释或扩展该范围。
+
 ## 01. 项目背景（Project Background）
 
 **CONFIRMED**：Personal AI Workbench 是一个由多个独立产品组成的个人 AI 工作台，聚焦工程经验复现、可复用工程能力和技术知识资产。Workbench 提供统一入口、共享基础设施和跨产品协作基础；各产品保持平级并拥有自己的业务边界。
@@ -181,6 +188,8 @@ Git 历史中的两个后端实现提交均记录于 **2026-11-13（+08:00）**�
 每个 Agent 交付时应提供：任务目标、完成内容、修改文件、关键代码位置、测试/验证证据、未完成事项、遗留问题、架构偏差和下一步建议。交接记录必须区分事实、决策、候选方案和未知事项，使新 Agent 无须依赖原始聊天即可从本文件与代码继续工作。
 
 ## 14. 下一步行动（Next Actions）
+
+0. **CONFIRMED**：Frozen Engineering Scope v1.0 和 Human-Owned Engineering 治理文档已落入 `docs/governance/`；后续施工应按 Phase → Milestone → Task 依赖关系规划，并遵守学习门槛、Milestone Review 和既有 CR Policy。
 
 1. **PENDING**：Project Owner 审阅本上下文与 README，确认项目 Python 基线；3.12 仅为曾提出的候选，3.15.2 是本地环境，工程声明为 `>=3.15,<3.16`。
 2. **PENDING**：若 Owner 确认 SQLite 决策，另行明确持久化目标、模型和事务边界后再派发施工任务。

@@ -94,6 +94,8 @@ personal-ai-workbench/
 | `products/*/README.md` | 各产品自身的定位、业务边界和产品说明。 |
 | Git | 保存代码与文档的完整变更历史、Commit 和 Diff。 |
 
+当前工程周期的范围边界以 Project Owner 批准的 [Frozen Engineering Scope v1.0](docs/governance/frozen-engineering-scope-v1.0.md) 为准；协作职责、学习门槛与 Milestone Review 见 [Human-Owned Engineering](docs/governance/human-owned-engineering.md)。新增范围须经 Project Owner 明确批准。
+
 主存档可记录重要变更的背景、目的、结果和 Commit 索引，但不替代 Git 版本管理。专项文档与主存档冲突时，Agent 不得假设任一方已废弃，应标明冲突并提交审查。
 
 ## AI Agent 协作规范
