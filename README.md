@@ -13,8 +13,8 @@ Personal AI Workbench 是一个由多个独立产品组成的个人 AI 工作台
 **Dossier → Page** — 卡片组织为 Dossier，并生成带来源与版本的 Page Reader。
 ![Dossier and page reader](docs/assets/screenshots/dossier-page-reader.png)
 
-**Visual Artifact** — 从已发布知识卡渲染 PNG 产物，保留来源、版本与 Mock 标识。
-<img src="docs/assets/screenshots/visual-artifact.png" width="520" alt="Visual artifact knowledge card with provenance and MOCK badge">
+**Visual Artifact** — 已发布知识卡的视觉产物与来源信息；可查看 [完整 Artifact PNG](docs/assets/screenshots/visual-artifact.png)。
+![Visual artifact in card detail](docs/assets/screenshots/visual-artifact-card.png)
 
 ## 快速开始
 

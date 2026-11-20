@@ -281,7 +281,7 @@ Git 历史中可确认两个后端实现提交，均记录于 **2026-11-13（+08
 
 ## 16. 项目展示与截图维护（Product Showcase Maintenance）
 
-- **DECIDED（Owner，2026-11-21）**：README 的 `Product Preview` 使用 `docs/assets/screenshots/` 中经过验证的精选截图；当前为 4 张：工作台总览、Capture/Draft/Publish、Dossier/Page Reader、Visual Artifact。
+- **DECIDED（Owner，2026-11-21）**：README 的 `Product Preview` 使用 `docs/assets/screenshots/` 中经过验证的精选截图；当前为 4 张横版展示图（工作台总览、Capture/Draft/Publish、Dossier/Page Reader、Visual Artifact Card 详情），并保留 `visual-artifact.png` 作为完整 Artifact 的链接。
 - **CONFIRMED**：截图必须来自当前运行中的 Web FE 或当前真实 Artifact，不使用静态设计稿；Mock/规则生成能力必须保留明确标识，不得包装为真实模型输出。
 - **维护约定**：每次重要 Feature 完成并通过验证后，判断是否值得更新展示；只替换或新增最有代表性的截图，删除过时截图；不因小改动频繁增加图片。
 - **一致性**：README 展示内容必须与实际代码、功能边界和 Mock 状态一致；展示截图发生变化时，同步检查 README 与本节的截图清单。
