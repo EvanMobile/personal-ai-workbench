@@ -2,6 +2,20 @@
 
 Personal AI Workbench 是一个由多个独立产品组成的个人 AI 工作台，聚焦工程经验复现、可复用工程能力与技术知识资产。三个产品保持平级，拥有各自独立的业务边界。
 
+## Product Preview
+
+**Workbench overview** — 三栏 IDE 式工作台：Context Directory、Focused Artifact 与 AI Chat 面板，顶部保留工作标签。
+![Workbench overview](docs/assets/screenshots/workbench-overview.png)
+
+**Capture → Draft → Publish** — Mock Digest 明确标注规则模拟；Draft 经人工审阅后显式 Publish。
+![Capture, draft and publish](docs/assets/screenshots/capture-draft-publish.png)
+
+**Dossier → Page** — 卡片组织为 Dossier，并生成带来源与版本的 Page Reader。
+![Dossier and page reader](docs/assets/screenshots/dossier-page-reader.png)
+
+**Visual Artifact** — 从已发布知识卡渲染 PNG 产物，保留来源、版本与 Mock 标识。
+<img src="docs/assets/screenshots/visual-artifact.png" width="520" alt="Visual artifact knowledge card with provenance and MOCK badge">
+
 ## 快速开始
 
 ```bash
@@ -28,6 +42,7 @@ cd services/api && python3.15 -m venv .venv && .venv/bin/pip install -e '.[dev]'
 - **知识资产**：分类、标签、Dossier 归档、Page 生成与版本化。
 - **Visual Artifact**：跨业务共享服务，按知识内容渲染 PNG 知识卡片，带文件缓存、来源版本与校验。
 - **Web Workbench**：三栏 IDE 式界面（Context Directory / Focused Artifact / AI Chat）、Artifact Tabs、Dossier Canvas、Card Masonry、Page Reader、沉浸式 Canvas。
+- **AI Chat**：对话历史与上下文建议；当前回复由本地规则生成，不调用外部模型。
 - **运维脚本**：统一启动/停止/状态；备份与恢复脚本。
 
 ## 技术基线
