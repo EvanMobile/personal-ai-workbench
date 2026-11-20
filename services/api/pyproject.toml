@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "personal-ai-workbench-api"
-version = "0.1.0"
+version = "0.2.0"
 description = "Shared FastAPI service for Personal AI Workbench"
 readme = "README.md"
 requires-python = ">=3.15,<3.16"
@@ -12,6 +12,12 @@ dependencies = [
     "fastapi>=0.120,<1",
     "pydantic>=2.14,<3",
     "uvicorn[standard]>=0.38,<1",
+    "sqlalchemy>=2.0,<2.2",
+    "alembic>=1.13,<2",
+    "psycopg[binary]>=3.1,<4",
+    "python-dotenv>=1.0,<2",
+    "python-multipart>=0.0.9,<1",
+    "pillow>=10,<14",
 ]
 
 [project.optional-dependencies]

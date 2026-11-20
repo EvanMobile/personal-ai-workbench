@@ -6,6 +6,14 @@
 
 关键架构决策、产品范围和优先级由 Project Owner 掌握。所有模型均须遵循 [Frozen Engineering Scope v1.0](frozen-engineering-scope-v1.0.md) 和 [Human-Owned Engineering](human-owned-engineering.md)。模型建议不构成 Owner 批准。
 
+## 工程协作约束
+
+- **唯一最终决策方**：Project Owner 是项目唯一最终决策方，拥有范围、架构、优先级和验收的最终决定权。
+- **授权范围内执行**：Agent 只能在明确授权的任务范围内执行；授权范围之外的工作须先取得 Owner 授权。
+- **输出不代替批准**：Agent 的建议、分析、Task Brief、Review 结论和实施结果，均不能代替 Owner 批准。
+- **冲突即暂停**：发现任务范围、架构或授权冲突时，暂停受影响的工作并向 Owner 汇报，不自行裁定或继续推进。
+- **交付须区分信息性质**：交付报告必须区分实际事实、建议、待决事项、实施结果和测试证据。
+
 ## 角色与职责
 
 ### ChatGPT — Architecture & Project Coordination
@@ -14,6 +22,7 @@
 - 讨论技术方案，拆解任务，并为关键决策提供建议。
 - 解释技术原理并引导学习。
 - Review 施工结果，把关工程质量；Review 不代替 Project Owner 验收。
+- 作为技术顾问，负责分析、架构建议、任务规划和技术 Review；不拥有独立的 Owner 授权权力。
 
 ### Codex — Primary Engineering Execution
 
@@ -21,6 +30,7 @@
 - 按明确的 Task Brief 执行任务，不擅自扩大范围。
 - 提供施工报告、变更文件清单、测试结果和必要的技术说明。
 - 未经明确授权不得 Commit 或 Push。
+- Codex、DSH 等 Implementation Agent 可在授权范围内自主分析、编码、测试和处理普通实现细节。
 
 ### Independent Model — On-demand Specialist
 

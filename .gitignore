@@ -85,3 +85,11 @@ secrets.*
 *.log
 tmp/
 temp/
+
+# Workbench local runtime data
+services/api/.data/
+.run/
+backups/
+
+# Test scratch data
+services/api/tests/.test-data/

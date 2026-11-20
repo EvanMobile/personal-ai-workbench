@@ -1,0 +1,7 @@
+node_modules
+dist
+*.local
+.pnpm-store
+.pnpm-cache
+.vite
+.DS_Store

@@ -41,11 +41,13 @@
 
 ### 已实现架构
 
-- **CONFIRMED**：Monorepo 包含 `apps/`、`products/`、`services/`、`docs/`。Web 与 Android 目录目前为空，无客户端代码或构建配置。
-- **CONFIRMED**：三个产品各有 README 产品说明，定义各自定位和边界；没有产品业务实现。
-- **CONFIRMED**：`services/api/` 使用 FastAPI、Pydantic 和 Uvicorn。`app/main.py` 注册 `/health` 和客户端 Capture Router。
-- **CONFIRMED**：Capture 流程是客户端 `POST /api/v1/ingestion/captures` → Pydantic 请求校验 → Router 调用 Service → 生成 `cap_<uuid-hex>` 临时确认标识 → HTTP 200 同步响应。当前不持久化 Capture，不创建持久化任务，也不触发 Fetch、Parse、Normalize 或后续 Ingestion。
-- **CONFIRMED**：API 基础与 Capture 测试共 9 项；最近验收结果为 9 passed。API README 描述当前运行方式、契约和限制。
+- **CONFIRMED**：Monorepo 包含 `apps/`、`products/`、`services/`、`docs/`、`scripts/`。`apps/web/` 已实现 React + TypeScript + Vite 工作台；`apps/android/` 仍为空。
+- **CONFIRMED**：三个产品各有 README；Personal Knowledge 已具备 P1.M1 纵向切片实现，Project Replay 与 Personal Arsenal 仅保留目录入口。
+- **CONFIRMED**：`services/api/` 使用 FastAPI、Pydantic、Uvicorn、PostgreSQL、SQLAlchemy 2.x、Alembic；`app/main.py` 注册 Capture、Knowledge、Dossier、Page、Artifact、Chat 路由。
+- **CONFIRMED**：Capture 支持文本、URL（仅保存不抓取）与 UTF-8 文本文件上传；Raw Content 持久化到 PostgreSQL，含来源、hash 与 metadata。
+- **CONFIRMED**：知识流程为 Capture → Mock Digest（六节 Draft）→ 人工修订 → 人工 Publish → Knowledge Asset + Visual Artifact；Publish 仅由显式接口触发。
+- **CONFIRMED**：Dossier（共享标签生成 edges）、Page（版本化 JSON 内容）与 Artifact（PNG 渲染、文件缓存、来源 hash 校验）已实现。
+- **CONFIRMED**：后端测试 21 项通过（2026-11-20 实际运行，PostgreSQL 测试库）；Web `pnpm build` 通过。
 - **CONFIRMED**：总体架构文档为 `docs/architecture/overview.md`。`docs/decisions/` 当前没有决策文档。
 
 ### 规划架构
@@ -75,7 +77,11 @@
 | Python 3.12 | **PROPOSED（曾由 Assistant 建议）** | 曾作为生态成熟度较高的候选版本提出；用户未批准为项目最终基线。 |
 | 项目 Python 基线 | **PENDING** | 尚未正式决定。应在项目实际依赖引入并完成兼容性验证后评估；不得将本地版本或当前声明单独升级为不可变架构决策。 |
 | FastAPI、Pydantic、Uvicorn | **CONFIRMED** | API 实际依赖与代码使用；FastAPI 提供 HTTP/OpenAPI，Pydantic 校验契约，Uvicorn 启动服务。 |
-| SQLite | **PENDING** | 历史上下文提到 SQLite 方向，但当前没有可核验的最终批准记录；没有数据库连接、Schema、ORM 或 SQLite 代码。 |
+| PostgreSQL | **CONFIRMED（已实现）** | Owner 于 2026-11-19 决定采用；本地 PostgreSQL 17.12 已运行，迁移已应用，测试使用 `workbench_test`。 |
+| SQLAlchemy 2.x + Alembic | **CONFIRMED（已实现）** | SQLAlchemy 2.1.9、Alembic 1.20.1、psycopg 3.3.9 已安装；迁移由 Alembic 管理。 |
+| React + TypeScript + Vite | **CONFIRMED（已实现）** | `apps/web/` 工作台；构建通过（Vite 7.3）。 |
+| Pillow（Visual Artifact） | **CONFIRMED（已实现）** | 知识卡片 PNG 渲染；无外部图片服务依赖。 |
+| pgvector | **PROPOSED** | 仅作为未来向量检索的演进路径；当前不启用、不建表，P3 再评估。 |
 | REST API | **CONFIRMED** | 当前 API 采用 HTTP 路径、JSON 请求/响应和状态码；该风格不代表全部资源契约已定。 |
 | FxTwitter API | **PROPOSED** | 作为 X 内容提取实验候选接口；未接入、未验证，不得当作 Provider 决策或能力。 |
 | LangGraph / Agent Runtime | **PROPOSED** | 作为未来多智能体工作流方向，尚未批准具体架构或加入依赖。 |
@@ -86,7 +92,7 @@
 
 ### 可由 Git 识别的两个后端施工动作
 
-Git 历史中的两个后端实现提交均记录于 **2026-11-13（+08:00）**。另有一次根 README 文档提交。因当前日期也是 2026-11-13，仓库证据不能证明这两个实现提交发生在“昨天”。它们是目前能确认的两个具体后端施工动作；是否就是用户所指“昨天的两个动作”标记为 **PENDING**，不伪造日期。
+Git 历史中可确认两个后端实现提交，均记录于 **2026-11-13（+08:00）**（`e123255`、`5148ecf`）；同期及之后另有若干文档与治理提交，索引见下节「相关文档动作」。核对本文档时当前日期为 **2026-11-19**，仓库证据仍不能证明这两个实现提交发生在用户所指的“昨天”。它们是目前能确认的两个具体后端施工动作；是否就是用户所指“昨天的两个动作”继续标记为 **PENDING**，不伪造日期。
 
 #### 动作 A：FastAPI 工程骨架 — `e123255`
 
@@ -94,7 +100,7 @@ Git 历史中的两个后端实现提交均记录于 **2026-11-13（+08:00）**�
 - **实施与文件**（`git show --name-only e123255`）：新增 `services/api/.env.example`、`services/api/README.md`、`services/api/app/__init__.py`、`services/api/app/api/__init__.py`、`services/api/app/api/v1/__init__.py`、`services/api/app/api/v1/shared/__init__.py`、`services/api/app/core/__init__.py`、`services/api/app/main.py`、`services/api/app/schemas/__init__.py`、`services/api/app/services/__init__.py`、`services/api/pyproject.toml`、`services/api/tests/test_health.py`。
 - **技术决策**：当次施工任务要求使用本地 Python 3.15.2、FastAPI/Pydantic、独立 `.venv` 与 Pytest；提交中 `pyproject.toml` 声明 `>=3.15,<3.16`。这证明当次实现环境/工程约束，不证明 Owner 已确定长期 Python 基线。没有数据库或 ORM 实现。
 - **验证**：历史施工报告记载 2 项健康/Swagger 测试通过且依赖安装成功；提交包含 `test_health.py`。当前没有独立 CI 测试日志，故通过结果属于历史报告，不能由 Git 提交本身独立验证。
-- **遗留**：SQLite 被提供的历史信息称为讨论方向，但仓库没有数据库实现；Python 最终基线仍为 **PENDING**。
+- **遗留**：SQLite 被提供的历史信息称为讨论方向，但仓库没有数据库实现；Python 最终基线仍为 **PENDING**。（2026-11-19 Owner 已决定改用 PostgreSQL，见 §05 与 §10。）
 - **治理审查**：施工范围与当次授权一致，添加依赖是为满足 FastAPI/测试要求且当次获得授权；未实现未授权业务。该动作发生时没有 `PROJECT_CONTEXT.md`，因此无法遵守“开工前阅读统一上下文”以及“施工后同步上下文”的流程；历史中也没有记录当时的 14 项治理协议。其余过程证据以提交内容和当时测试报告为限，不推断未留痕的审查步骤。
 
 #### 动作 B：CLIENT Capture API — `5148ecf`
@@ -111,24 +117,40 @@ Git 历史中的两个后端实现提交均记录于 **2026-11-13（+08:00）**�
 
 提交 `b5c3421`（`docs: update workbench project overview`，2026-11-13）仅修改 `README.md`。Git Diff 显示其更新项目总览、目录状态及文档导航；这是 README 项目介绍更新，不是 AI Agent 治理规范提交，也不计为上述两个后端施工动作。随后本任务要求 README 加入协作规范并创建本文件。
 
+### 文档与治理提交索引（2026-11-13 至 2026-11-19）
+
+**CONFIRMED**：以下提交由 `git log`、`git show --stat` 直接核实；五项均未改变后端实现，故不计入上述两个后端施工动作。
+
+| 提交 | 日期（+08:00） | 变更文件 | 说明 |
+|---|---|---|---|
+| `594dec5` | 2026-11-13 | `PROJECT_CONTEXT.md` | 首次建立本主存档（+189 行） |
+| `05b2ecd` | 2026-11-13 | `README.md` | README 治理规范补充（+98/−48） |
+| `3a2e59d` | 2026-11-14 | `skills/knowledge-analysis/SKILL.md` | ContentParser Skill v1.1（+370 行） |
+| `12d119e` | 2026-11-19 | `docs/governance/` 两份新文档、`PROJECT_CONTEXT.md`、`README.md` | Frozen Scope v1.0 与 Human-Owned Engineering 落地 |
+| `29e895f` | 2026-11-19 | `docs/governance/multi-model-engineering-collaboration.md` | 多模型协作约定 |
+
+**CONFIRMED**：`12d119e` 对本文档为增量修改（+9 行），未重写既有章节；当前 `HEAD` 即 `29e895f`。
+
 ## 07. 当前项目状态（Current Project Status）
 
-- **CONFIRMED — 已完成**：总体架构基线、三份产品定位文档、FastAPI 工程骨架、健康检查、CLIENT Capture 同步确认 API、对应测试和 API README。
-- **CONFIRMED — 已验证**：最近 API 验收为 9 项测试通过；当前 HEAD 为 `5148ecf`，分支 `main` 与 `origin/main` 同步，开始本次文档任务时工作区干净。
-- **PENDING — 未开始**：Web/Android 实现；Capture 持久化；数据库连接；Fetch、Parse、Normalize 与异步 Ingestion；Document 和后续知识处理。
+- **CONFIRMED — 已完成**：P1.M1 第一阶段纵向切片：PostgreSQL 基础设施、Capture 持久化、Mock Digest、Draft 修订、人工 Publish、Dossier、Page、Visual Artifact、Web 三栏工作台、启动/停止/健康检查脚本、备份与恢复脚本。
+- **CONFIRMED — 已验证（2026-11-20）**：后端 `pytest` 21 passed（真实 PostgreSQL 测试库）；前端 `pnpm build` 通过；`./scripts/workbench.sh start` 可启动三项服务并输出 URL；备份 → 空库恢复演练行数一致（7 assets / 7 raw / 7 captures）且附件恢复成功。
+- **CONFIRMED — 现场**：`HEAD` 仍为 `29e895f`；工作区有大量未提交新增/修改（后端模块、迁移、Web、脚本、文档），**未 Commit / Push**。
+- **PENDING — 未开始**：真实外部 LLM Provider 调用；URL 抓取与 PDF/Word 解析；RAG/Embedding/pgvector 实现；Android；钉钉；完整评测。
 - **CONFIRMED**：`docs/decisions/` 当前无文件；没有 LangGraph、Agent Runtime、FxTwitter Provider 或 RAG 实现。
 
 ## 08. 当前施工位置（Current Working Position）
 
-- **CONFIRMED**：项目总体架构为 Active Baseline；API 工程基础和第一个 Capture 接口已交付。
-- **CONFIRMED**：最近有效代码施工完成于 `5148ecf`。当前 API 成功响应为 HTTP 200，且不持久化、不触发后续处理。
-- **PENDING**：本次正在建立工程上下文档案和根 README 多智能体治理规范；交付后等待 Project Owner 审阅。
-- **下一步**：Owner 确认本文记录的 Python 版本冲突与“昨天两项动作”的时间归属；之后再授权下一项工程任务。不要自行开始数据库或 Ingestion Pipeline 施工。
+- **CONFIRMED**：项目总体架构为 Active Baseline；P1.M1 第一阶段实现已落盘并通过本地端到端验证。
+- **CONFIRMED — 当前阶段**：Owner 已授权 P1.M1 第一阶段施工；PostgreSQL、后端、Visual Artifact、Web 与运维脚本已实现，服务可通过 `./scripts/workbench.sh start` 启动。
+- **CONFIRMED — 边界**：真实外部 LLM 调用仍未授权，默认 Mock Provider；URL 不抓取；PDF/Word/图片/视频不支持；RAG/pgvector/Redis 未实现。
+- **CONFIRMED — 门禁**：**Git Commit / Push 未获授权**；首次真实 Provider 调用须单独报告并等待 Owner 授权。
+- **下一步**：Owner / GPT 验收；根据反馈修复；获得单独授权后再 Commit。
 
 ## 09. 遗留问题与技术债务（Pending Issues & Technical Debt）
 
 1. **PENDING**：项目最终 Python 基线尚未决定；当前本地为 3.15.2，`pyproject.toml` 要求 `>=3.15,<3.16`。Python 3.12 是 Assistant 曾建议的候选，未获用户最终批准。
-2. **PENDING**：SQLite 是否为最终数据库选择尚待确认；数据模型、迁移、事务和访问模式均未设计或实现。
+2. **CONFIRMED（已实现）**：PostgreSQL 17 已作为基础关系数据库运行；Schema 由 Alembic 管理；备份/恢复脚本已完成一次空库演练。剩余债务：索引与查询优化、pgvector 评估。
 3. **PENDING**：无法由提交时间验证两项后端动作是“昨天”发生的；Git 记录日期均为 2026-11-13。
 4. **PENDING**：Capture 是否在同步确认后持久化、后续任务如何产生以及幂等/重试语义尚未设计。
 5. **PENDING**：输入类型扩展、URL 规范化、Provider 选择、来源证据及错误契约待需求确认。未来实现 URL Fetch 时按风险核对目标地址、重定向、超时和响应大小；当前不引入额外安全架构或基础设施。
@@ -143,7 +165,7 @@ Git 历史中的两个后端实现提交均记录于 **2026-11-13（+08:00）**�
 - **CONFIRMED**：Capture 当前是同步确认接口，成功状态为 200；Capture ID 临时生成，不等于持久化资源。
 - **PROPOSED（曾由 Assistant 建议）**：Python 3.12 曾作为候选方案提出，用户未批准为最终基线。
 - **PENDING**：项目 Python 基线尚未正式决定；当前本地为 3.15.2，工程声明为 `>=3.15,<3.16`。应在依赖引入并验证兼容性后由 Owner 决定。
-- **PENDING**：SQLite 为历史讨论方向，最终决策待确认，当前未实施。
+- **DECIDED / CONFIRMED**：采用 PostgreSQL 作为基础关系数据库；数据访问采用 SQLAlchemy 2.x、迁移采用 Alembic；已实现并通过测试。
 - **PROPOSED**：FxTwitter、LangGraph/GPT Review Callback 是待评估方向，不得当作批准或已实现。
 
 ## 11. AI Agent 施工契约（Agent Engineering Contract）
@@ -168,7 +190,7 @@ Git 历史中的两个后端实现提交均记录于 **2026-11-13（+08:00）**�
 ## 12. 变更与审查协议（Change & Review Protocol）
 
 1. 发现架构问题时先提出问题、原因、影响和可选方案；未经授权不实施架构变更。
-2. 需要决策或范围不清时暂停依赖该决策的工作，并请 Owner/Chief Architect 审查。
+2. 需要决策或范围不清时，暂停受影响的工作并提交 Project Owner 决定；Chief Architect / GPT 可以提供分析、方案比较和 Review 意见，但不拥有独立的 Owner 决策或授权权力。
 3. 实施后提供完整 Diff、验证命令与结果、范围检查和未解决风险。
 4. GPT Review 检查实现与设计的一致性、模块职责、依赖变化、异常处理、测试质量和技术债务；Review 是建议与证据，不是 Owner 批准。
 5. 核心架构变更由 Project Owner 最终确认。提交、推送、发布等操作遵循每项任务的明确授权。
@@ -192,7 +214,60 @@ Git 历史中的两个后端实现提交均记录于 **2026-11-13（+08:00）**�
 0. **CONFIRMED**：Frozen Engineering Scope v1.0 和 Human-Owned Engineering 治理文档已落入 `docs/governance/`；后续施工应按 Phase → Milestone → Task 依赖关系规划，并遵守学习门槛、Milestone Review 和既有 CR Policy。
 
 1. **PENDING**：Project Owner 审阅本上下文与 README，确认项目 Python 基线；3.12 仅为曾提出的候选，3.15.2 是本地环境，工程声明为 `>=3.15,<3.16`。
-2. **PENDING**：若 Owner 确认 SQLite 决策，另行明确持久化目标、模型和事务边界后再派发施工任务。
+2. **DECIDED / PENDING（实现）**：数据库基线已定为 PostgreSQL（2026-11-19）；持久化目标、数据模型、迁移与事务边界仍待基础设施 Task 明确后再派发业务施工。
 3. **PENDING**：针对 Capture 是否创建持久化资源或后续 Ingestion Task 形成明确契约；保持当前 API 同步确认语义，直到变更获批。
 4. **PROPOSED**：在 Provider 选择获批后，单独设计 X 内容提取实验；不得直接把 FxTwitter 接入生产路径。
 5. **PENDING**：Web、Android 与 LangGraph/GPT Review Callback 仅在需求和架构获批后排期。
+
+6. **CONFIRMED**：Owner 已受理 D1（本文档事实性修订）与 D2（四份规划文档审查与授权机制）。本轮**不批准 P1.M1 编码、不批准 Commit / Push**。本文档修订依据 D1 方案 E1–E6 及 §12.2 决策归属修正完成；未新增任何技术选型批准。
+
+7. **CONFIRMED（2026-11-19）**：Owner 批准七模块职责与依赖、Personal Knowledge 对象生命周期两份文档为当前架构基线；Owner 决定采用 PostgreSQL 作为基础关系数据库（SQLAlchemy 2.x + Alembic 方向）。P1.M1 实施准备已收敛为 v0.3。
+
+8. **CONFIRMED（2026-11-20）**：P1.M1 第一阶段实际施工完成并通过本地端到端验证（后端 21 tests、前端 build、启动脚本、备份恢复演练）。真实外部 LLM 调用与 Commit / Push 仍未获授权。
+
+## 15. 规划文档基座与审批状态（Planning Document Baseline）
+
+**本节只记录 2026-11-19 核对所得事实与并存差异；除 Owner 本轮明确的 PostgreSQL 决定及由此同步的 §05/§09/§10/§14 事实状态外，不改变其他既有状态判定，也不构成对未决事项的裁决。**
+
+### 15.1 未提交规划文档（CONFIRMED）
+
+- **CONFIRMED**：截至 `29e895f`，以下 4 个文件存在于工作区但未纳入 Git，无提交历史；仓库内没有正式 Review 或审批记录。两份架构文档的 Owner 批准结论仅记录于本节，尚未形成独立档案：
+  - `docs/architecture/module-responsibilities-and-dependencies.md`
+  - `docs/architecture/personal-knowledge-object-lifecycle.md`
+  - `docs/roadmap/engineering-roadmap-v1.0.md`
+  - `docs/roadmap/p1-m1-implementation-preparation.md`
+- **CONFIRMED**：未提交状态只表示未纳入版本管理。七模块职责与依赖、Personal Knowledge 对象生命周期两份文档已于 2026-11-19 获 Owner 批准为架构基线；工程路线图与 P1.M1 实施准备仍为 **PROPOSED**。
+- **PENDING**：是否提交、以何粒度提交、何时提交均未获授权。**未获授权前不得 Commit / Push。**
+
+### 15.2 审批状态
+
+| 文档 | 角色 | 文档自述状态 | Owner 审批状态 | Git 状态 |
+|---|---|---|---|---|
+| 七模块职责与依赖 | M01–M07 协作边界 | 未标注 | **Owner 已批准（2026-11-19）**，当前架构基线 | 未提交（待提交授权） |
+| Personal Knowledge 对象生命周期 | M02 对象归属与生命周期 | 未标注 | **Owner 已批准（2026-11-19）**，当前架构基线 | 未提交（待提交授权） |
+| 工程路线图 v1.0 | P1–P4 与首个 Task Brief | **PROPOSED** | 保持 PROPOSED | 未提交 |
+| P1.M1 实施准备 | 基础设施与业务方案、接口草案、测试要求 | **PROPOSED** | 保持 PROPOSED；第一阶段实现已落盘（2026-11-20），待验收 | 未提交 |
+
+### 15.3 技术选型授权口径
+
+- **PROPOSED — 待 Owner 确认**：曾讨论的“折中授权制”（涉及数据外发、费用、第三方服务、长期数据格式与外部契约的事项由 Owner 决定；局部实现方案由 Agent 提出论证、经 Owner 授权后执行）目前仍是建议，**不是已批准的项目制度**。
+- **CONFIRMED — Owner（2026-11-19）**：DSH 是 Implementation Agent，可在明确授权范围内自主分析、编码、测试和处理普通实现细节。该原则不改变“折中授权制”整体仍为 PROPOSED 的状态。
+- **CONFIRMED**：该建议不构成对 Provider、Web 技术基线或其他未决选型的批准；PostgreSQL 已由 Owner 单独决定（§05），相关事项保持本文件既有状态不变。
+- **CONFIRMED**：`docs/roadmap/p1-m1-implementation-preparation.md` 已按 v0.3 修订（2026-11-19）：采用 PostgreSQL 基线，不再包含“不需要 Owner 决策”“本次已解决”表述；路线图门禁措辞保持原文，见 15.4 CF-1。
+
+### 15.4 口径冲突记录（含已解决与未决，不得静默改写）
+
+| 编号 | 冲突内容 | 现状 | 处理约束 |
+|---|---|---|---|
+| **CF-1** | 路线图 P1.M1 依赖列要求 Owner 先确认持久化/迁移、Provider/模型、Web 基线，“不得由施工 Agent 暗选”；`human-owned-engineering.md` 允许 Agent 做可逆实现选择 | 实施准备已修订（v0.3），不再声称“不需要 Owner 决策”；路线图门禁措辞与 `human-owned-engineering.md:22` 的解释仍未统一 | 以更严格者为准；两份文本的措辞统一须 Owner 授权 |
+| **CF-2** | ~~SQLite：本文件 §05/§09 为 PENDING；实施准备默认采用标准库 `sqlite3` 方案~~ | **已解决（2026-11-19）**：Owner 决定采用 PostgreSQL；本文件 §05/§09/§10 与实施准备已同步，SQLite 不再作为当前方案 | — |
+| **CF-3** | Provider：实施准备曾称 Owner 已明确允许 OpenAI，仓库内无独立授权记录；初始模型 `gpt-6.2-sol` 未经仓库证据验证 | 未决；实施准备 v0.3 保持“待核实”，但授权本身仍未确认 | 保持待确认；不得把转述当作已核实授权 |
+| **CF-4** | 术语 `M0.2` / `M02` 在路线图与对象生命周期文档中混用，仓库无其定义 | 未决 | 先确认指代，再统一写法；不得自行补定义 |
+| **CF-5** | Frozen Scope 交付标准要求 ADR；`docs/decisions/` 为空且无模板、编号或审批人 | 未决 | 不得以其他文档替代 ADR 交付标准 |
+
+### 15.5 当前门禁（CONFIRMED）
+
+- P1.M1 第一阶段已获 Owner 授权并完成实现，等待验收；后续阶段未授权。
+- Git Commit / Push 未获授权。
+- 真实外部 LLM Provider 调用未获授权，默认 Mock。
+- Owner 已受理 D1、D2；其余决策事项未表决。
