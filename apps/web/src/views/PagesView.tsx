@@ -57,11 +57,11 @@ export function PagesView({ openView }: { openView: OpenView }) {
     setCreating(true)
     setCreateError(null)
     try {
-      const page = await api.createPage(dossierId, title.trim() || undefined)
+      const created = await api.createPage(dossierId, title.trim() || undefined)
       setCreateOpen(false)
       notify('Page created.', 'success')
       reload()
-      openView('page', { id: page.id }, page.title)
+      openView('page', { id: created.page.id }, created.page.title)
     } catch (caught) {
       setCreateError(errorMessage(caught))
     } finally {

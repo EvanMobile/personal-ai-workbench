@@ -202,9 +202,9 @@ export function DossierDetailView({
     setCreatingPage(true)
     setActionError(null)
     try {
-      const page = await api.createPage(data.dossier.id)
+      const created = await api.createPage(data.dossier.id)
       notify('Page created from dossier.', 'success')
-      openView('page', { id: page.id }, page.title)
+      openView('page', { id: created.page.id }, created.page.title)
     } catch (caught) {
       setActionError(errorMessage(caught))
       notify(errorMessage(caught), 'danger')

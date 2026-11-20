@@ -219,7 +219,7 @@ export const api = {
   pages: (signal?: AbortSignal) => request<PageSummary[]>('/knowledge/pages', { signal }),
 
   createPage: (dossierId: string, title?: string, signal?: AbortSignal) =>
-    request<PageSummary>('/knowledge/pages', {
+    request<PageDetailData>('/knowledge/pages', {
       method: 'POST',
       body: title ? { dossier_id: dossierId, title } : { dossier_id: dossierId },
       signal,
