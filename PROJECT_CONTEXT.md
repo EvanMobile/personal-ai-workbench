@@ -41,15 +41,18 @@
 
 ### 已实现架构
 
-- **CONFIRMED**：Monorepo 包含 `apps/`、`products/`、`services/`、`docs/`、`scripts/`。`apps/web/` 已实现 React + TypeScript + Vite 工作台；`apps/android/` 仍为空。
-- **CONFIRMED**：三个产品各有 README；Personal Knowledge 已具备 P1.M1 纵向切片实现，Project Replay 与 Personal Arsenal 仅保留目录入口。
-- **CONFIRMED**：`services/api/` 使用 FastAPI、Pydantic、Uvicorn、PostgreSQL、SQLAlchemy 2.x、Alembic；`app/main.py` 注册 Capture、Knowledge、Dossier、Page、Artifact、Chat 路由。
+- **CONFIRMED**：Monorepo 包含 `apps/`、`products/`、`services/`、`docs/`、`scripts/`，并在仓库根目录包含可独立版本管理的 `personal-arsenal/` 工程资产库。`apps/web/` 已实现 React + TypeScript + Vite 工作台；`apps/android/` 仍为空。
+- **CONFIRMED**：三个产品各有 README；Personal Knowledge 已具备 P1.M1 纵向切片实现，Project Replay 仍以产品定义为主；Personal Arsenal 已初始化全局 Catalog、Topic Manifest / 文档规范及 DingTalk Topic。Personal Arsenal 保存可复用工程资产；Personal Knowledge 保存知识解释、专业经验及整理后的知识资产。
+- **CONFIRMED**：`services/api/` 使用 FastAPI、Pydantic、Uvicorn、PostgreSQL、SQLAlchemy 2.x、Alembic；`app/main.py` 注册 Capture、Knowledge、Dossier、Page、Artifact、Chat 和 DingTalk 路由。
 - **CONFIRMED**：Capture 支持文本、URL（仅保存不抓取）与 UTF-8 文本文件上传；Raw Content 持久化到 PostgreSQL，含来源、hash 与 metadata。
 - **CONFIRMED**：知识流程为 Capture → Mock Digest（六节 Draft）→ 人工修订 → 人工 Publish → Knowledge Asset + Visual Artifact；Publish 仅由显式接口触发。
 - **CONFIRMED**：Dossier（共享标签生成 edges）、Page（版本化 JSON 内容）与 Artifact（PNG 渲染、文件缓存、来源 hash 校验）已实现。
 - **CONFIRMED**：后端测试 28 项通过（2026-11-20 实际运行，PostgreSQL 测试库）；Web `pnpm build` 通过。
 - **CONFIRMED**：Create Page 后前端标签页导航缺陷已于 2026-11-21 修复（`215045b`），并由前端构建与浏览器交互验证。
 - **CONFIRMED**：Web 已实现全局 zh-CN / en-US 切换（默认中文，localStorage 持久化）；UI 文案集中于 `apps/web/src/i18n/messages.ts`，日期与相对时间随语言切换。
+- **CONFIRMED（2026-11-24，`99463fa`）**：右侧 ChatPanel 已增加独立 DingTalk 手动消息测试入口；FE 调用 FastAPI DingTalk Router / Service，通过服务端环境变量读取群机器人 Webhook，执行关键词校验并安全反馈成功或失败。Mock 测试 10 项通过；真实消息端到端结果由 Owner 确认已送达钉钉群。实现见 `apps/web/src/components/ChatPanel.tsx`、`services/api/app/api/v1/dingtalk/` 与 `services/api/app/modules/dingtalk/`；排查和验证依据见 [DingTalk TLS 案例](personal-arsenal/topics/dingtalk/docs/01-local-python-https-tls-diagnosis.md)。
+- **CONFIRMED（2026-11-24，`99463fa`）**：`scripts/workbench.sh` 在启动 API 子进程时设置 `SSL_CERT_FILE=/etc/ssl/cert.pem`。该设置仅作用于 API 子进程；API Python 已验证加载 128 个 CA，访问 DingTalk 公共 HTTPS 主机时证书链和主机名验证成功，TLS 验证保持开启。
+- **CONFIRMED（2026-11-24，`e48a63a`）**：Personal Arsenal 已在仓库根目录初始化，包含全局 README、Topic Catalog、Manifest 与统一资产文档规范；DingTalk Topic 已登记并收录完整中文 TLS 故障排查案例。工程文档保留 Markdown 原始资料，供研发人员直接阅读；不与 Personal Knowledge 的职责混同。
 - **CONFIRMED**：总体架构文档为 `docs/architecture/overview.md`。`docs/decisions/` 当前没有决策文档。
 
 ### 规划架构
@@ -136,8 +139,10 @@ Git 历史中可确认两个后端实现提交，均记录于 **2026-11-13（+08
 | `ec6c7a7` | 2026-11-21 | `README.md`、`PROJECT_CONTEXT.md`、`visual-artifact-card.png` | 修正 README 截图为横版布局 |
 | `4b2bd21` | 2026-11-24 | 30 files（FE i18n） | 全局 zh-CN / en-US UI 切换 |
 | `d3d5453` | 2026-11-24 | README 4 screenshots | 刷新为中文最新界面（含语言入口） |
+| `99463fa` | 2026-11-24 | 13 files（DingTalk FE/API、Mock tests、API CA runtime） | 增加真实 Webhook 消息测试链路及 API TLS CA 启动配置 |
+| `e48a63a` | 2026-11-24 | `personal-arsenal/` 8 files | 初始化 Personal Arsenal 与 DingTalk TLS 工程案例 |
 
-**CONFIRMED**：`12d119e` 对本文档为增量修改（+9 行），未重写既有章节。核对时 `HEAD` 为 `d3d5453`；本文档更新会在其之后形成单独的文档提交。
+**CONFIRMED**：前述提交记录按 Git 提交历史核实；`99463fa` 与 `e48a63a` 是最近完成的两个独立交付。本节保留较早文档提交时的历史上下文，不代表当前 HEAD 或当前工作区状态。
 
 ## 07. 当前项目状态（Current Project Status）
 
@@ -145,17 +150,19 @@ Git 历史中可确认两个后端实现提交，均记录于 **2026-11-13（+08
 - **CONFIRMED — 已验证（2026-11-20）**：后端 `pytest` 28 passed（真实 PostgreSQL 测试库）；前端 `pnpm build` 通过；`./scripts/workbench.sh start` 可启动三项服务并输出 URL；备份/恢复演练已执行并通过。验证时的数据规模与当前数据库行数可能不同，不将历史数据量当作当前事实。
 - **CONFIRMED — 已验证（2026-11-21）**：Create Page 修复通过 `tsc -b` + `vite build`；浏览器交互中 Create Page 能打开对应 Page，已有 Page 的打开与标签切换正常。为避免写入数据库，交互验证拦截了 POST `/knowledge/pages` 并返回既有 Page 详情；后端真实创建路径由既有测试覆盖。
 - **CONFIRMED — 已验证（2026-11-24）**：FE 全局 i18n 使用 React Context + 集中词典（zh-CN / en-US 各 **462** 个消息键），零新增运行时依赖；`pnpm check:i18n` 5 项通过，`pnpm build` 通过；浏览器实测默认中文、即时切换、刷新/重开持久化、日期本地化及 480/600px Header 无横向溢出。
-- **CONFIRMED — 现场**：核对时 `HEAD` 为 `d3d5453`，`main` 与 `origin/main` 同步，工作区 Clean。基线提交为 `03a8382`，导航修复提交为 `215045b`，README 展示提交为 `f01fb6e` / `ec6c7a7`，i18n 提交为 `4b2bd21`，截图刷新提交为 `d3d5453`；本文档更新将形成单独的文档提交。
-- **PENDING — 未开始**：真实外部 LLM Provider 调用；URL 抓取与 PDF/Word 解析；RAG/Embedding/pgvector 实现；Android；钉钉；完整评测；Knowledge Page Generation / Visual Generation / MCP Adapter 下一阶段施工。
+- **CONFIRMED — 已验证（2026-11-24）**：DingTalk Mock 测试 10 项通过；Phase 3 使用 API Python 验证 DNS、公共 HTTPS、CA 加载、证书链和 hostname；API Health / Readiness 与路由检查通过。Owner 确认真实消息在钉钉群送达，端到端验收完成。Personal Arsenal 文档与 Topic 元数据随 `e48a63a` 初始化。
+- **CONFIRMED — Git 交付（2026-11-24）**：`99463fa`（DingTalk FE/API、Mock 测试与 API CA 运行配置）先于 `e48a63a`（Personal Arsenal 结构与案例）提交。当前记录更新时两者均为本地提交、尚未 Push；分支和远程同步状态需以当前 Git 查询为准。
+- **PENDING — 未开始**：真实外部 LLM Provider 调用；URL 抓取与 PDF/Word 解析；RAG/Embedding/pgvector 实现；Android；完整评测；Knowledge Page Generation / Visual Generation / MCP Adapter 下一阶段施工。
 - **CONFIRMED**：`docs/decisions/` 当前无文件；没有 LangGraph、Agent Runtime、FxTwitter Provider 或 RAG 实现。
 
 ## 08. 当前施工位置（Current Working Position）
 
-- **CONFIRMED**：项目总体架构为 Active Baseline；P1.M1 第一阶段实现已落盘、验证、提交并推送。
-- **CONFIRMED — 当前阶段**：P1.M1 工程基线已建立（`03a8382`），Create Page 导航缺陷已独立修复（`215045b`），README 产品展示与横版截图布局已入库（`f01fb6e` / `ec6c7a7`），Web 全局 zh-CN / en-US 切换已完成并提交（`4b2bd21`）；PostgreSQL、后端、Visual Artifact、Web 与运维脚本均可运行。
+- **CONFIRMED**：项目总体架构为 Active Baseline；P1.M1 第一阶段实现已落盘、验证、提交并推送。后续 `99463fa` 与 `e48a63a` 完成 DingTalk 消息测试链路与 Personal Arsenal 初始化；这两个提交目前仅在本地，尚未 Push。
+- **CONFIRMED — 当前阶段**：除 P1.M1 基线与 Web i18n 外，DingTalk 手动 Webhook 消息发送已由 Owner 端到端验收；API 进程 CA 信任配置已验证；Personal Arsenal 工程资产库及 DingTalk TLS 案例已建立。
 - **CONFIRMED — 边界**：真实外部 LLM 调用仍未授权，默认 Mock Provider；URL 不抓取；PDF/Word/图片/视频不支持；RAG/pgvector/Redis 未实现。
-- **CONFIRMED — 门禁**：P1.M1 基线的 Commit / Push 已完成；**后续阶段的编码、Commit、Push 与首次真实 Provider 调用仍须单独授权**。
-- **下一步**：等待 Owner 派发下一阶段任务；在授权前不要自行启动 Page/Visual/MCP 施工或扩展范围。
+- **CONFIRMED — 门禁**：P1.M1 基线的 Commit / Push 已完成；`99463fa` 与 `e48a63a` 的本地 Commit 已获本次明确授权，尚未 Push。后续 Commit / Push 与首次真实 Provider 调用仍须单独授权。
+- **PROPOSED — 待讨论**：Personal Arsenal 后续可评估 LLM 驱动的工程资产综合消化与图文报告生成，使工程文档、源码、Git 历史和验收证据可组织为面向 FE 阅读的技术报告。尚未形成产品决策；Schema、数据库结构、Renderer 与任务流水线均留待单独讨论，不属于当前实现。
+- **下一步**：等待 Owner 派发后续任务；在授权前不要启动上述提案或其他超出已批准范围的施工。
 
 ## 09. 遗留问题与技术债务（Pending Issues & Technical Debt）
 

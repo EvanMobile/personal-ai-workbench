@@ -46,6 +46,11 @@ cd services/api && python3.15 -m venv .venv && .venv/bin/pip install -e '.[dev]'
 - **AI Chat**：对话历史与上下文建议；当前回复由本地规则生成，不调用外部模型。
 - **运维脚本**：统一启动/停止/状态；备份与恢复脚本。
 
+## 近期工程成果（独立于 P1.M1）
+
+- **DingTalk 消息测试**：右侧 AI Chat 面板提供独立的手动测试入口，经本机 FastAPI 向配置的钉钉群机器人 Webhook 发送消息；Owner 已确认真实消息送达。API 使用服务端环境变量保存 Webhook 配置，并在 API 启动时加载可用 CA Bundle，保持 TLS 证书与主机名验证。
+- **Personal Arsenal 工程资产**：仓库根目录提供可移植的资产库和 Topic 注册表；DingTalk Topic 已沉淀完整中文 TLS 故障排查案例。Personal Arsenal 保存可复用工程资产，Personal Knowledge 保存知识解释与整理结果，职责相互独立。
+
 ## 技术基线
 
 - PostgreSQL 17、SQLAlchemy 2.x、Alembic、psycopg 3
@@ -63,6 +68,7 @@ services/api/             FastAPI + PostgreSQL
   migrations/             Alembic 迁移
   tests/                  pytest（真实 PostgreSQL 测试库）
 docs/                     架构、治理与路线图
+personal-arsenal/         可移植的工程资产库与 Topic 文档
 products/                 三产品定位
 skills/                   知识分析 Skill 文档
 scripts/                  workbench.sh / backup.sh / restore.sh
@@ -81,6 +87,8 @@ scripts/                  workbench.sh / backup.sh / restore.sh
 - [总体架构](docs/architecture/overview.md)
 - [七模块职责](docs/architecture/module-responsibilities-and-dependencies.md)
 - [Personal Knowledge 对象生命周期](docs/architecture/personal-knowledge-object-lifecycle.md)
+- [Personal Arsenal 资产库](personal-arsenal/README.md)
+- [DingTalk TLS 故障排查案例](personal-arsenal/topics/dingtalk/docs/01-local-python-https-tls-diagnosis.md)
 - [Frozen Engineering Scope v1.0](docs/governance/frozen-engineering-scope-v1.0.md)
 - [工程路线图](docs/roadmap/engineering-roadmap-v1.0.md)
 - [P1.M1 实施准备](docs/roadmap/p1-m1-implementation-preparation.md)

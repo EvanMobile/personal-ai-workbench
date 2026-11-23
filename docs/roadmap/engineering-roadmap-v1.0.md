@@ -2,6 +2,8 @@
 
 **状态：PROPOSED — 提交 Project Owner 审阅。**
 
+> 状态说明：本路线图保留其规划语境。后续已单独交付 DingTalk 手动 Webhook 消息测试及真实送达验证（`99463fa`），但这不等同于 P4 所述 Web + Android 的任务状态展示闭环；当前实现记录见 [`PROJECT_CONTEXT.md`](../../PROJECT_CONTEXT.md)。
+
 本路线图承接 Frozen Engineering Scope v1.0 和 M0.2 明确的七模块职责，不增加模块或产品范围。Page、Working Session 等是 Owner 在 M0.2 中给出的 M02 产品定义细节，本路线图不据此修改冻结文件。路线以尽早形成可用的 Personal Knowledge Web 纵向切片为先；高级 RAG、Android、DingTalk 和完整评测能力按依赖逐步补齐。数据库、ORM、模型/Provider、Web 技术栈等未决项不在本路线图中擅自选定。
 
 ## Phase 总览
