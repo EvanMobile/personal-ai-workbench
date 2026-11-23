@@ -121,7 +121,7 @@ Git 历史中可确认两个后端实现提交，均记录于 **2026-11-13（+08
 
 ### 文档、治理与 P1.M1 提交索引（2026-11-13 至 2026-11-24）
 
-**CONFIRMED**：以下提交由 `git log`、`git show --stat` 直接核实。前五项为文档与治理提交；`03a8382` 为 P1.M1 工程基线，`215045b` 为 Create Page 导航修复，`f01fb6e` / `ec6c7a7` 为 README 产品展示与版式修正，`4b2bd21` 为 FE 全局中英文切换。
+**CONFIRMED**：以下提交由 `git log`、`git show --stat` 直接核实。前五项为文档与治理提交；`03a8382` 为 P1.M1 工程基线，`215045b` 为 Create Page 导航修复，`f01fb6e` / `ec6c7a7` 为 README 产品展示与版式修正，`4b2bd21` 为 FE 全局中英文切换，`d3d5453` 为 README 展示截图的中文最新版刷新。
 
 | 提交 | 日期（+08:00） | 变更文件 | 说明 |
 |---|---|---|---|
@@ -135,8 +135,9 @@ Git 历史中可确认两个后端实现提交，均记录于 **2026-11-13（+08
 | `f01fb6e` | 2026-11-21 | `README.md`、`PROJECT_CONTEXT.md`、4 张产品截图 | README 增加 Product Preview |
 | `ec6c7a7` | 2026-11-21 | `README.md`、`PROJECT_CONTEXT.md`、`visual-artifact-card.png` | 修正 README 截图为横版布局 |
 | `4b2bd21` | 2026-11-24 | 30 files（FE i18n） | 全局 zh-CN / en-US UI 切换 |
+| `d3d5453` | 2026-11-24 | README 4 screenshots | 刷新为中文最新界面（含语言入口） |
 
-**CONFIRMED**：`12d119e` 对本文档为增量修改（+9 行），未重写既有章节。核对时 `HEAD` 为 `4b2bd21`；本文档更新会在其之后形成单独的文档提交。
+**CONFIRMED**：`12d119e` 对本文档为增量修改（+9 行），未重写既有章节。核对时 `HEAD` 为 `d3d5453`；本文档更新会在其之后形成单独的文档提交。
 
 ## 07. 当前项目状态（Current Project Status）
 
@@ -144,7 +145,7 @@ Git 历史中可确认两个后端实现提交，均记录于 **2026-11-13（+08
 - **CONFIRMED — 已验证（2026-11-20）**：后端 `pytest` 28 passed（真实 PostgreSQL 测试库）；前端 `pnpm build` 通过；`./scripts/workbench.sh start` 可启动三项服务并输出 URL；备份/恢复演练已执行并通过。验证时的数据规模与当前数据库行数可能不同，不将历史数据量当作当前事实。
 - **CONFIRMED — 已验证（2026-11-21）**：Create Page 修复通过 `tsc -b` + `vite build`；浏览器交互中 Create Page 能打开对应 Page，已有 Page 的打开与标签切换正常。为避免写入数据库，交互验证拦截了 POST `/knowledge/pages` 并返回既有 Page 详情；后端真实创建路径由既有测试覆盖。
 - **CONFIRMED — 已验证（2026-11-24）**：FE 全局 i18n 使用 React Context + 集中词典（zh-CN / en-US 各 **462** 个消息键），零新增运行时依赖；`pnpm check:i18n` 5 项通过，`pnpm build` 通过；浏览器实测默认中文、即时切换、刷新/重开持久化、日期本地化及 480/600px Header 无横向溢出。
-- **CONFIRMED — 现场**：核对时 `HEAD` 为 `4b2bd21`，`main` 与 `origin/main` 同步，工作区 Clean。基线提交为 `03a8382`，导航修复提交为 `215045b`，README 展示提交为 `f01fb6e` / `ec6c7a7`，i18n 提交为 `4b2bd21`；本文档更新将形成单独的文档提交。
+- **CONFIRMED — 现场**：核对时 `HEAD` 为 `d3d5453`，`main` 与 `origin/main` 同步，工作区 Clean。基线提交为 `03a8382`，导航修复提交为 `215045b`，README 展示提交为 `f01fb6e` / `ec6c7a7`，i18n 提交为 `4b2bd21`，截图刷新提交为 `d3d5453`；本文档更新将形成单独的文档提交。
 - **PENDING — 未开始**：真实外部 LLM Provider 调用；URL 抓取与 PDF/Word 解析；RAG/Embedding/pgvector 实现；Android；钉钉；完整评测；Knowledge Page Generation / Visual Generation / MCP Adapter 下一阶段施工。
 - **CONFIRMED**：`docs/decisions/` 当前无文件；没有 LangGraph、Agent Runtime、FxTwitter Provider 或 RAG 实现。
 
@@ -292,5 +293,6 @@ Git 历史中可确认两个后端实现提交，均记录于 **2026-11-13（+08
 
 - **DECIDED（Owner，2026-11-21）**：README 的 `Product Preview` 使用 `docs/assets/screenshots/` 中经过验证的精选截图；当前为 4 张横版展示图（工作台总览、Capture/Draft/Publish、Dossier/Page Reader、Visual Artifact Card 详情），并保留 `visual-artifact.png` 作为完整 Artifact 的链接。
 - **CONFIRMED**：截图必须来自当前运行中的 Web FE 或当前真实 Artifact，不使用静态设计稿；Mock/规则生成能力必须保留明确标识，不得包装为真实模型输出。
+- **CONFIRMED（2026-11-24）**：README 的 4 张横版展示图已刷新为当前 zh-CN 界面，包含 Header 语言切换、Mock 标识与真实 Card/Page 数据，且无临时 Toast；图片仍使用原路径，完整 Artifact PNG 保留链接。
 - **维护约定**：每次重要 Feature 完成并通过验证后，判断是否值得更新展示；只替换或新增最有代表性的截图，删除过时截图；不因小改动频繁增加图片。
 - **一致性**：README 展示内容必须与实际代码、功能边界和 Mock 状态一致；展示截图发生变化时，同步检查 README 与本节的截图清单。
