@@ -86,7 +86,7 @@ start_api() {
   fi
   [ -x "$API_DIR/.venv/bin/uvicorn" ] || fail "API venv missing; install dependencies first"
   say "api: starting on $API_URL"
-  ( cd "$API_DIR" && spawn_detached api .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port "$API_PORT" )
+  ( cd "$API_DIR" && SSL_CERT_FILE="/etc/ssl/cert.pem" spawn_detached api .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port "$API_PORT" )
   for _ in $(seq 1 40); do
     if curl -fsS "$API_URL/health/ready" >/dev/null 2>&1; then
       say "api: ready"

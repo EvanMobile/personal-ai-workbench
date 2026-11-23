@@ -256,6 +256,13 @@ export const api = {
       signal,
     }),
 
+  sendDingTalkMessage: (content: string, signal?: AbortSignal) =>
+    request<{ status: string; message: string }>('/integrations/dingtalk/messages', {
+      method: 'POST',
+      body: { content },
+      signal,
+    }),
+
   suggestions: (signal?: AbortSignal) =>
     request<ChatSuggestion[]>('/chat/suggestions', { signal }),
 }

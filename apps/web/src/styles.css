@@ -4259,6 +4259,54 @@ body.is-resizing * {
   gap: 6px;
 }
 
+.dingtalk-test {
+  margin-bottom: 9px;
+  padding: 8px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: #0e0f11;
+}
+
+.dingtalk-test-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.dingtalk-test-head > span {
+  color: var(--muted-dim);
+  font-size: 8px;
+  text-align: right;
+}
+
+.dingtalk-test-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.dingtalk-input {
+  min-height: 38px;
+  max-height: 80px;
+  font-size: 9px;
+}
+
+.dingtalk-send {
+  min-height: 30px;
+  flex: 0 0 auto;
+}
+
+.dingtalk-result {
+  margin-top: 6px;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.dingtalk-result-success { color: #8ec9a0; }
+.dingtalk-result-error { color: #e38c87; }
+
 .chat-input {
   flex: 1;
   width: 100%;

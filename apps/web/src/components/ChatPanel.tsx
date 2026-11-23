@@ -111,6 +111,9 @@ export function ChatPanel({
   const [creating, setCreating] = useState(false)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
+  const [dingtalkInput, setDingtalkInput] = useState('')
+  const [dingtalkSending, setDingtalkSending] = useState(false)
+  const [dingtalkResult, setDingtalkResult] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
   const [suggestions, setSuggestions] = useState<ChatSuggestion[]>([])
   const [suggestionsError, setSuggestionsError] = useState<string | null>(null)
   const [pendingSuggestion, setPendingSuggestion] = useState<ChatSuggestion | null>(null)
@@ -252,6 +255,26 @@ export function ChatPanel({
     }
   }
 
+  const sendDingTalk = async (event: FormEvent) => {
+    event.preventDefault()
+    const content = dingtalkInput.trim()
+    if (!content || dingtalkSending) return
+    setDingtalkSending(true)
+    setDingtalkResult(null)
+    try {
+      await api.sendDingTalkMessage(content)
+      setDingtalkResult({ kind: 'success', text: t('chat.dingtalkSuccess') })
+    } catch (caught) {
+      setDingtalkResult({ kind: 'error', text: errorMessage(caught) })
+    } finally {
+      setDingtalkSending(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!dingtalkInput) setDingtalkInput(t('chat.dingtalkDefault'))
+  }, [dingtalkInput, t])
+
   const activeConversation = conversations.find((item) => item.id === activeId) ?? null
 
   return (
@@ -389,6 +412,37 @@ export function ChatPanel({
       </div>
 
       <div className="chat-compose">
+        <section className="dingtalk-test" aria-label={t('chat.dingtalkTitle')}>
+          <div className="dingtalk-test-head">
+            <MicroLabel>{t('chat.dingtalkTitle')}</MicroLabel>
+            <span>{t('chat.dingtalkGroup')}</span>
+          </div>
+          <form className="dingtalk-test-form" onSubmit={sendDingTalk}>
+            <textarea
+              className="chat-input dingtalk-input"
+              value={dingtalkInput}
+              onChange={(event) => setDingtalkInput(event.target.value)}
+              rows={2}
+              maxLength={2000}
+              disabled={dingtalkSending}
+              aria-label={t('chat.dingtalkMessage')}
+            />
+            <button
+              type="submit"
+              className="button small primary dingtalk-send"
+              disabled={dingtalkSending || !dingtalkInput.trim()}
+              aria-label={dingtalkSending ? t('chat.dingtalkSending') : t('chat.dingtalkSend')}
+            >
+              <Icon name={dingtalkSending ? 'refresh' : 'send'} size={12} />
+              {dingtalkSending ? t('chat.dingtalkSending') : t('chat.dingtalkSend')}
+            </button>
+          </form>
+          {dingtalkResult && (
+            <div className={`dingtalk-result dingtalk-result-${dingtalkResult.kind}`} role="status" aria-live="polite">
+              {dingtalkResult.text}
+            </div>
+          )}
+        </section>
         {suggestionsError && (
           <div className="suggestion-error">
             <Icon name="alert" size={11} />

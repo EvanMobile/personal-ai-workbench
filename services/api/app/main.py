@@ -13,6 +13,7 @@ from app.api.v1.artifact.router import router as artifact_router
 from app.api.v1.chat.router import router as chat_router
 from app.api.v1.client.ingestion.captures import router as capture_router
 from app.api.v1.dossier.router import router as dossier_router
+from app.api.v1.dingtalk.router import router as dingtalk_router
 from app.api.v1.knowledge.router import router as knowledge_router
 from app.api.v1.page.router import router as page_router
 from app.core.config import ensure_data_dirs, get_settings
@@ -47,6 +48,7 @@ app.include_router(dossier_router)
 app.include_router(page_router)
 app.include_router(artifact_router)
 app.include_router(chat_router)
+app.include_router(dingtalk_router)
 
 
 def _database_ok() -> bool:

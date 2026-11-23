@@ -29,6 +29,8 @@ class Settings:
     allow_real_llm: bool
     cors_origins: tuple[str, ...]
     max_upload_bytes: int
+    dingtalk_webhook_url: str
+    dingtalk_keyword: str
 
 
 @lru_cache
@@ -53,6 +55,8 @@ def get_settings() -> Settings:
             if origin.strip()
         ),
         max_upload_bytes=int(os.getenv("MAX_UPLOAD_BYTES", str(2 * 1024 * 1024))),
+        dingtalk_webhook_url=os.getenv("DINGTALK_WEBHOOK_URL", "").strip(),
+        dingtalk_keyword=os.getenv("DINGTALK_KEYWORD", "钉钉测试").strip(),
     )
 
 
