@@ -1,0 +1,51 @@
+schema_version: "1.0"
+
+topics:
+  - id: dingtalk
+    name: DingTalk
+    path: topics/dingtalk
+    status: active
+    asset_types:
+      - documentation
+      - troubleshooting
+      - scripts
+      - tests
+      - evidence
+    description: DingTalk 集成、消息发送、HTTP 客户端、TLS 信任与网络故障排查。
+  - id: llm-evaluation
+    name: 大语言模型评估（LLM Evaluation）
+    path: topics/llm-evaluation
+    status: planned
+    asset_types:
+      - documentation
+      - code
+      - tests
+    description: 计划用于沉淀可复用的大语言模型评估方法与工具。
+  - id: react
+    name: ReAct
+    path: topics/react
+    status: planned
+    asset_types:
+      - documentation
+      - code
+      - examples
+    description: 计划用于沉淀 ReAct 模式与可复用实现。
+  - id: harness
+    name: Harness
+    path: topics/harness
+    status: planned
+    asset_types:
+      - documentation
+      - code
+      - scripts
+      - tests
+    description: 计划用于沉淀智能体 Harness 工程资产。
+  - id: mcp
+    name: MCP
+    path: topics/mcp
+    status: planned
+    asset_types:
+      - documentation
+      - code
+      - examples
+    description: 计划用于沉淀模型上下文协议（MCP）集成与可复用资产。

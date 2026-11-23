@@ -1,0 +1,9 @@
+schema_version: "1.0"
+
+entries:
+  - date: "2026-11-24"
+    type: initialized
+    summary: 初始化 DingTalk 主题目录和元数据。
+  - date: "2026-11-24"
+    type: asset-added
+    summary: 添加本机 Python HTTPS/TLS 故障排查案例，记录已验证的 CA 信任修复和 Owner 确认的真实消息送达结果。
