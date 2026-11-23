@@ -119,9 +119,9 @@ Git 历史中可确认两个后端实现提交，均记录于 **2026-11-13（+08
 
 提交 `b5c3421`（`docs: update workbench project overview`，2026-11-13）仅修改 `README.md`。Git Diff 显示其更新项目总览、目录状态及文档导航；这是 README 项目介绍更新，不是 AI Agent 治理规范提交，也不计为上述两个后端施工动作。随后本任务要求 README 加入协作规范并创建本文件。
 
-### 文档、治理与 P1.M1 提交索引（2026-11-13 至 2026-11-21）
+### 文档、治理与 P1.M1 提交索引（2026-11-13 至 2026-11-24）
 
-**CONFIRMED**：以下提交由 `git log`、`git show --stat` 直接核实。前五项为文档与治理提交；`03a8382` 为 P1.M1 工程基线，`215045b` 为 Create Page 导航修复，`f01fb6e` / `ec6c7a7` 为 README 产品展示与版式修正。
+**CONFIRMED**：以下提交由 `git log`、`git show --stat` 直接核实。前五项为文档与治理提交；`03a8382` 为 P1.M1 工程基线，`215045b` 为 Create Page 导航修复，`f01fb6e` / `ec6c7a7` 为 README 产品展示与版式修正，`4b2bd21` 为 FE 全局中英文切换。
 
 | 提交 | 日期（+08:00） | 变更文件 | 说明 |
 |---|---|---|---|
@@ -134,22 +134,24 @@ Git 历史中可确认两个后端实现提交，均记录于 **2026-11-13（+08
 | `215045b` | 2026-11-21 | `apps/web/src/api.ts`、`DossierDetailView.tsx`、`PagesView.tsx` | 修复 Create Page 后 Page 标签导航 |
 | `f01fb6e` | 2026-11-21 | `README.md`、`PROJECT_CONTEXT.md`、4 张产品截图 | README 增加 Product Preview |
 | `ec6c7a7` | 2026-11-21 | `README.md`、`PROJECT_CONTEXT.md`、`visual-artifact-card.png` | 修正 README 截图为横版布局 |
+| `4b2bd21` | 2026-11-24 | 30 files（FE i18n） | 全局 zh-CN / en-US UI 切换 |
 
-**CONFIRMED**：`12d119e` 对本文档为增量修改（+9 行），未重写既有章节。核对时 `HEAD` 为 `ec6c7a7`；本文档更新会在其之后形成单独的文档提交。
+**CONFIRMED**：`12d119e` 对本文档为增量修改（+9 行），未重写既有章节。核对时 `HEAD` 为 `4b2bd21`；本文档更新会在其之后形成单独的文档提交。
 
 ## 07. 当前项目状态（Current Project Status）
 
-- **CONFIRMED — 已完成**：P1.M1 第一阶段纵向切片：PostgreSQL 基础设施、Capture 持久化、Mock Digest、Draft 修订、人工 Publish、Dossier、Page、Visual Artifact、Web 三栏工作台、启动/停止/健康检查脚本、备份与恢复脚本；Create Page 导航缺陷已修复；Web 已支持全局中英文切换。
+- **CONFIRMED — 已完成**：P1.M1 第一阶段纵向切片：PostgreSQL 基础设施、Capture 持久化、Mock Digest、Draft 修订、人工 Publish、Dossier、Page、Visual Artifact、Web 三栏工作台、启动/停止/健康检查脚本、备份与恢复脚本；Create Page 导航缺陷已修复；Web 全局 zh-CN / en-US 切换已完成并提交。
 - **CONFIRMED — 已验证（2026-11-20）**：后端 `pytest` 28 passed（真实 PostgreSQL 测试库）；前端 `pnpm build` 通过；`./scripts/workbench.sh start` 可启动三项服务并输出 URL；备份/恢复演练已执行并通过。验证时的数据规模与当前数据库行数可能不同，不将历史数据量当作当前事实。
 - **CONFIRMED — 已验证（2026-11-21）**：Create Page 修复通过 `tsc -b` + `vite build`；浏览器交互中 Create Page 能打开对应 Page，已有 Page 的打开与标签切换正常。为避免写入数据库，交互验证拦截了 POST `/knowledge/pages` 并返回既有 Page 详情；后端真实创建路径由既有测试覆盖。
-- **CONFIRMED — 现场**：核对时 `HEAD` 为 `ec6c7a7`，`main` 与 `origin/main` 同步，工作区 Clean。基线提交为 `03a8382`，导航修复提交为 `215045b`，README 展示提交为 `f01fb6e` / `ec6c7a7`；本文档更新将形成单独的文档提交。
+- **CONFIRMED — 已验证（2026-11-24）**：FE 全局 i18n 使用 React Context + 集中词典（zh-CN / en-US 各 **462** 个消息键），零新增运行时依赖；`pnpm check:i18n` 5 项通过，`pnpm build` 通过；浏览器实测默认中文、即时切换、刷新/重开持久化、日期本地化及 480/600px Header 无横向溢出。
+- **CONFIRMED — 现场**：核对时 `HEAD` 为 `4b2bd21`，`main` 与 `origin/main` 同步，工作区 Clean。基线提交为 `03a8382`，导航修复提交为 `215045b`，README 展示提交为 `f01fb6e` / `ec6c7a7`，i18n 提交为 `4b2bd21`；本文档更新将形成单独的文档提交。
 - **PENDING — 未开始**：真实外部 LLM Provider 调用；URL 抓取与 PDF/Word 解析；RAG/Embedding/pgvector 实现；Android；钉钉；完整评测；Knowledge Page Generation / Visual Generation / MCP Adapter 下一阶段施工。
 - **CONFIRMED**：`docs/decisions/` 当前无文件；没有 LangGraph、Agent Runtime、FxTwitter Provider 或 RAG 实现。
 
 ## 08. 当前施工位置（Current Working Position）
 
 - **CONFIRMED**：项目总体架构为 Active Baseline；P1.M1 第一阶段实现已落盘、验证、提交并推送。
-- **CONFIRMED — 当前阶段**：P1.M1 工程基线已建立（`03a8382`），Create Page 导航缺陷已独立修复（`215045b`），README 产品展示与横版截图布局已入库（`f01fb6e` / `ec6c7a7`），Web 全局中英文切换已实现；PostgreSQL、后端、Visual Artifact、Web 与运维脚本均可运行。
+- **CONFIRMED — 当前阶段**：P1.M1 工程基线已建立（`03a8382`），Create Page 导航缺陷已独立修复（`215045b`），README 产品展示与横版截图布局已入库（`f01fb6e` / `ec6c7a7`），Web 全局 zh-CN / en-US 切换已完成并提交（`4b2bd21`）；PostgreSQL、后端、Visual Artifact、Web 与运维脚本均可运行。
 - **CONFIRMED — 边界**：真实外部 LLM 调用仍未授权，默认 Mock Provider；URL 不抓取；PDF/Word/图片/视频不支持；RAG/pgvector/Redis 未实现。
 - **CONFIRMED — 门禁**：P1.M1 基线的 Commit / Push 已完成；**后续阶段的编码、Commit、Push 与首次真实 Provider 调用仍须单独授权**。
 - **下一步**：等待 Owner 派发下一阶段任务；在授权前不要自行启动 Page/Visual/MCP 施工或扩展范围。
@@ -237,7 +239,7 @@ Git 历史中可确认两个后端实现提交，均记录于 **2026-11-13（+08
 
 10. **CONFIRMED（2026-11-21）**：README `Product Preview` 已完成（`f01fb6e` / `ec6c7a7`），使用 4 张横版展示图于 `docs/assets/screenshots/`；完整 Artifact PNG 作为链接保留。该项为展示文档，不改变功能边界。
 
-11. **CONFIRMED（2026-11-24）**：FE 全局 i18n 已完成（默认 zh-CN、en-US 即时切换、localStorage 持久化）；文案资源、日期/相对时间与语言入口已统一。真实 Provider、后端错误详情与生成内容仍按各自语言/数据原样呈现。
+11. **CONFIRMED（2026-11-24）**：FE 全局 i18n 已完成并提交（`4b2bd21`，30 files）：React Context、zh-CN / en-US 即时切换、localStorage 持久化、日期/相对时间本地化；集中词典 **462** 个消息键，`check:i18n` 5 项检查，零新增运行时依赖。真实 Provider、后端错误详情与生成内容仍按各自语言/数据原样呈现。
 
 ## 15. 规划文档基座与审批状态（Planning Document Baseline）
 
