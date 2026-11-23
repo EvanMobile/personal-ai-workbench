@@ -12,8 +12,11 @@ import { api } from './api'
 import { ChatPanel } from './components/ChatPanel'
 import { ContextTree } from './components/ContextTree'
 import { Icon } from './components/Icon'
+import { LanguageSwitcher } from './components/LanguageSwitcher'
 import { TabStrip } from './components/TabStrip'
 import { useToast } from './components/Toast'
+import { useI18n } from './i18n'
+import type { MessageKey } from './i18n/messages'
 import type { OpenView, ViewKind, ViewParams, WorkspaceTab } from './types'
 import { clamp, cx } from './utils'
 import { CardDetailView } from './views/CardDetailView'
@@ -34,7 +37,7 @@ const ACTIVE_STORAGE_KEY = 'paw.workspace.active.v1'
 const HOME_TAB: WorkspaceTab = {
   id: 'home',
   kind: 'home',
-  title: 'Workbench',
+  title: '',
   closable: false,
 }
 
@@ -76,33 +79,37 @@ const SINGLETON_VIEWS = new Set<ViewKind>([
   'arsenal',
 ])
 
-function defaultTitle(kind: ViewKind, params?: ViewParams): string {
+function defaultTitle(
+  kind: ViewKind,
+  params: ViewParams | undefined,
+  t: (key: MessageKey) => string,
+): string {
   if (params?.title) return params.title
   switch (kind) {
     case 'home':
-      return 'Workbench'
+      return t('tabs.workbench')
     case 'capture':
-      return 'Capture'
+      return t('tabs.capture')
     case 'cards':
-      return 'Cards'
+      return t('tabs.cards')
     case 'card':
-      return 'Card'
+      return t('tabs.card')
     case 'dossiers':
-      return 'Dossiers'
+      return t('tabs.dossiers')
     case 'dossier':
-      return 'Dossier'
+      return t('tabs.dossier')
     case 'pages':
-      return 'Pages'
+      return t('tabs.pages')
     case 'page':
-      return params?.title ? `Page · ${params.title}` : 'Page'
+      return params?.title ? `${t('tabs.page')} · ${params.title}` : t('tabs.page')
     case 'draft':
-      return 'Draft'
+      return t('tabs.draft')
     case 'project-replay':
-      return 'Project Replay'
+      return t('tabs.projectReplay')
     case 'arsenal':
-      return 'Personal Arsenal'
+      return t('tabs.arsenal')
     default:
-      return 'Untitled'
+      return t('tabs.untitled')
   }
 }
 
@@ -182,6 +189,7 @@ function readLayout(): LayoutState {
 
 export default function App() {
   const { notify } = useToast()
+  const { locale, t } = useI18n()
   const [boot] = useState(readWorkspace)
   const [layout, setLayout] = useState<LayoutState>(readLayout)
   const [tabs, setTabs] = useState<WorkspaceTab[]>(boot.tabs)
@@ -199,20 +207,52 @@ export default function App() {
     writeJson(LAYOUT_STORAGE_KEY, layout)
   }, [layout])
 
+  const tabTitle = (tab: WorkspaceTab): string => {
+    switch (tab.kind) {
+      case 'home':
+        return t('tabs.workbench')
+      case 'capture':
+        return t('tabs.capture')
+      case 'cards':
+        return t('tabs.cards')
+      case 'dossiers':
+        return t('tabs.dossiers')
+      case 'pages':
+        return t('tabs.pages')
+      case 'draft':
+        return t('tabs.draft')
+      case 'project-replay':
+        return t('tabs.projectReplay')
+      case 'arsenal':
+        return t('tabs.arsenal')
+      case 'card':
+        return tab.title || t('tabs.card')
+      case 'dossier':
+        return tab.title || t('tabs.dossier')
+      case 'page':
+        return tab.title || t('tabs.page')
+      default:
+        return tab.title || t('tabs.untitled')
+    }
+  }
+  const displayTabs = tabs.map((tab) => ({ ...tab, title: tabTitle(tab) }))
+
   useEffect(() => {
-    document.title = activeTab ? `${activeTab.title} · Personal AI Workbench` : 'Personal AI Workbench'
-  }, [activeTab])
+    document.title = activeTab ? `${tabTitle(activeTab)} · Personal AI Workbench` : 'Personal AI Workbench'
+    // tabTitle is derived from the active tab and current locale.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, locale])
 
   const checkApi = useCallback(async (quiet = false) => {
     if (!quiet) setApiStatus('checking')
     try {
       const health = await api.health()
-      if (health.status !== 'ok') throw new Error('Health check reported an unhealthy status.')
+      if (health.status !== 'ok') throw new Error(t('app.healthError'))
       setApiStatus('online')
     } catch {
       setApiStatus('offline')
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     void checkApi()
@@ -222,7 +262,7 @@ export default function App() {
 
   const openView = useCallback<OpenView>((kind, params, title) => {
     const id = viewTabId(kind, params)
-    const resolvedTitle = title?.trim() || defaultTitle(kind, params)
+    const resolvedTitle = title?.trim() || defaultTitle(kind, params, t)
     setTabs((previous) => {
       const existing = previous.find((tab) => tab.id === id)
       if (existing) {
@@ -250,7 +290,7 @@ export default function App() {
     })
     setActiveId(id)
     setImmersive(false)
-  }, [])
+  }, [t])
 
   const closeTab = useCallback(
     (id: string) => {
@@ -268,7 +308,7 @@ export default function App() {
             const newPagesTab: WorkspaceTab = {
               id: 'pages',
               kind: 'pages',
-              title: 'Pages',
+              title: t('tabs.pages'),
               closable: true,
             }
             remaining = [...remaining, newPagesTab]
@@ -284,7 +324,7 @@ export default function App() {
       setTabs(remaining)
       setImmersive(false)
     },
-    [activeId, tabs],
+    [activeId, tabs, t],
   )
 
   const startResize = (
@@ -377,9 +417,9 @@ export default function App() {
     if (showToastForRestore.current) return
     showToastForRestore.current = true
     if (boot.tabs.length > 1) {
-      notify('Last workspace session restored.', 'info')
+      notify(t('app.sessionRestored'), 'info')
     }
-  }, [boot.tabs.length, notify])
+  }, [boot.tabs.length, notify, t])
 
   const style = {
     '--left-width': `${layout.leftWidth}px`,
@@ -396,23 +436,28 @@ export default function App() {
             </span>
             <div className="brand-copy">
               <strong>Personal AI Workbench</strong>
-              <span>LOCAL KNOWLEDGE OS · P1.M1</span>
+              <span>{t('app.tagline')}</span>
             </div>
           </div>
           <div className="brand-center" aria-hidden="true">
             <span className="brand-rule" />
-            <span className="brand-env">WORKSPACE // ACTIVE</span>
+            <span className="brand-env">{t('app.workspaceActive')}</span>
             <span className="brand-rule" />
           </div>
           <div className="brand-actions">
+            <LanguageSwitcher />
             <button
               type="button"
               className={cx('api-pill', `api-pill-${apiStatus}`)}
               onClick={() => void checkApi()}
-              title="Check API connection"
+              title={t('app.checkApi')}
             >
               <span className={cx('api-dot', `api-dot-${apiStatus}`)} />
-              {apiStatus === 'online' ? 'API ONLINE' : apiStatus === 'offline' ? 'API OFFLINE' : 'CHECKING'}
+              {apiStatus === 'online'
+                ? t('app.apiOnline')
+                : apiStatus === 'offline'
+                  ? t('app.apiOffline')
+                  : t('app.apiChecking')}
             </button>
             <button
               type="button"
@@ -423,8 +468,8 @@ export default function App() {
                   rightCollapsed: !previous.rightCollapsed,
                 }))
               }
-              title={layout.rightCollapsed ? 'Open AI chat panel' : 'Collapse AI chat panel'}
-              aria-label={layout.rightCollapsed ? 'Open AI chat panel' : 'Collapse AI chat panel'}
+              title={layout.rightCollapsed ? t('app.openChat') : t('app.collapseChat')}
+              aria-label={layout.rightCollapsed ? t('app.openChat') : t('app.collapseChat')}
               aria-pressed={!layout.rightCollapsed}
             >
               <Icon name="panel-right" size={14} />
@@ -434,7 +479,7 @@ export default function App() {
 
         <div className="editor-bar">
           <TabStrip
-            tabs={tabs}
+            tabs={displayTabs}
             activeId={activeTab.id}
             onSelect={(id) => {
               setActiveId(id)
@@ -446,14 +491,14 @@ export default function App() {
           <div className="editor-bar-right">
             {immersive && (
               <span className="immersive-chip">
-                <Icon name="maximize" size={10} /> Focus mode
+                <Icon name="maximize" size={10} /> {t('app.focusMode')}
               </span>
             )}
             <span className="editor-hint">
-              <span className="kbd">⌘</span>N capture
+              <span className="kbd">⌘</span>{t('app.captureShortcut')}
             </span>
             <span className="editor-hint">
-              <span className="kbd">⌘</span>\ chat
+              <span className="kbd">⌘</span>{t('app.chatShortcut')}
             </span>
           </div>
         </div>
@@ -464,12 +509,11 @@ export default function App() {
           <div className="offline-left">
             <Icon name="alert" size={14} />
             <span>
-              <strong>API offline</strong> — cannot reach the workbench service at{' '}
-              <code>127.0.0.1:8000</code>. Start the backend, then retry.
+              {t('app.offlineBody', { url: '127.0.0.1:8000' })}
             </span>
           </div>
           <button type="button" className="button small ghost" onClick={() => void checkApi()}>
-            <Icon name="refresh" size={12} /> Retry
+            <Icon name="refresh" size={12} /> {t('common.retry')}
           </button>
         </div>
       )}
@@ -486,7 +530,7 @@ export default function App() {
             <ContextTree activeTab={activeTab} openView={openView} apiStatus={apiStatus} />
             <ResizeHandle
               side="left"
-              label="Resize context directory"
+              label={t('app.resizeContext')}
               onPointerDown={(event) => startResize('left', event)}
               onKeyDown={(event) => nudgeWidth('left', event)}
             />
@@ -508,7 +552,7 @@ export default function App() {
           <>
             <ResizeHandle
               side="right"
-              label="Resize AI chat panel"
+              label={t('app.resizeChat')}
               onPointerDown={(event) => startResize('right', event)}
               onKeyDown={(event) => nudgeWidth('right', event)}
             />
@@ -574,7 +618,7 @@ function renderTab(
       return id ? (
         <CardDetailView assetId={id} openView={openView} />
       ) : (
-        <MissingTarget openView={openView} label="Card" />
+        <MissingTarget openView={openView} kind="card" />
       )
     case 'dossiers':
       return <DossiersView openView={openView} />
@@ -588,7 +632,7 @@ function renderTab(
           openView={openView}
         />
       ) : (
-        <MissingTarget openView={openView} label="Dossier" />
+        <MissingTarget openView={openView} kind="dossier" />
       )
     case 'pages':
       return <PagesView openView={openView} />
@@ -600,13 +644,13 @@ function renderTab(
           onClose={() => closeTab(tab.id)}
         />
       ) : (
-        <MissingTarget openView={openView} label="Page" />
+        <MissingTarget openView={openView} kind="page" />
       )
     case 'draft':
       return id ? (
         <DraftView draftId={id} openView={openView} />
       ) : (
-        <MissingTarget openView={openView} label="Draft" />
+        <MissingTarget openView={openView} kind="draft" />
       )
     case 'project-replay':
       return <PlaceholderView kind="project-replay" openView={openView} />
@@ -617,16 +661,29 @@ function renderTab(
   }
 }
 
-function MissingTarget({ label, openView }: { label: string; openView: OpenView }) {
+function MissingTarget({
+  kind,
+  openView,
+}: {
+  kind: 'card' | 'dossier' | 'page' | 'draft'
+  openView: OpenView
+}) {
+  const { t } = useI18n()
+  const labelKeys = {
+    card: 'tabs.card',
+    dossier: 'tabs.dossier',
+    page: 'tabs.page',
+    draft: 'tabs.draft',
+  } as const
   return (
     <div className="view-scroll">
       <div className="view-inner">
         <div className="missing-target">
           <Icon name="alert" size={20} />
-          <h1>{label} reference missing</h1>
-          <p>This tab was restored without a record identifier.</p>
+          <h1>{t('app.missingTarget', { label: t(labelKeys[kind]) })}</h1>
+          <p>{t('app.pageMissingBody')}</p>
           <button type="button" className="button primary" onClick={() => openView('home')}>
-            Return to workbench
+            {t('app.returnWorkbench')}
           </button>
         </div>
       </div>

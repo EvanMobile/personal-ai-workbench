@@ -11,22 +11,25 @@ import {
 import { useAsyncData } from '../hooks/useAsyncData'
 import type { Asset, KnowledgeStats, OpenView } from '../types'
 import { relativeTime, sortAssetsNewest } from '../utils'
+import { useI18n } from '../i18n'
+import type { MessageKey } from '../i18n/messages'
 
 interface HomeData {
   stats: KnowledgeStats
   assets: Asset[]
 }
 
-const statLabels: Array<{ key: keyof KnowledgeStats; label: string; accent?: boolean }> = [
-  { key: 'raw_contents', label: 'Raw inputs' },
-  { key: 'drafts', label: 'Drafts' },
-  { key: 'assets', label: 'Cards', accent: true },
-  { key: 'dossiers', label: 'Dossiers' },
-  { key: 'pages', label: 'Pages' },
-  { key: 'artifacts', label: 'Artifacts' },
+const statLabels: Array<{ key: keyof KnowledgeStats; labelKey: MessageKey; accent?: boolean }> = [
+  { key: 'raw_contents', labelKey: 'home.rawInputs' },
+  { key: 'drafts', labelKey: 'home.drafts' },
+  { key: 'assets', labelKey: 'home.cards', accent: true },
+  { key: 'dossiers', labelKey: 'home.dossiers' },
+  { key: 'pages', labelKey: 'home.pages' },
+  { key: 'artifacts', labelKey: 'home.artifacts' },
 ]
 
 export function HomeView({ openView }: { openView: OpenView }) {
+  const { t } = useI18n()
   const { data, loading, error, reload } = useAsyncData<HomeData>(async (signal) => {
     const [stats, assets] = await Promise.all([api.stats(signal), api.assets(signal)])
     return { stats, assets: sortAssetsNewest(assets) }
@@ -36,18 +39,18 @@ export function HomeView({ openView }: { openView: OpenView }) {
     <div className="view-scroll">
       <div className="view-inner">
         <ViewHeader
-          eyebrow="Workbench / Overview"
-          title="Personal AI Workbench"
-          description="A local workspace for capturing context, distilling knowledge, and composing artifacts."
+          eyebrow={t('home.eyebrow')}
+          title={t('home.title')}
+          description={t('home.description')}
           actions={
             <>
               <button type="button" className="button ghost" onClick={reload}>
                 <Icon name="refresh" size={13} />
-                Refresh
+                {t('common.refresh')}
               </button>
               <button type="button" className="button primary" onClick={() => openView('capture')}>
                 <Icon name="bolt" size={13} />
-                New capture
+                {t('home.newCapture')}
               </button>
             </>
           }
@@ -55,7 +58,7 @@ export function HomeView({ openView }: { openView: OpenView }) {
 
         {error && <ErrorBanner message={error} onRetry={reload} />}
 
-        <section className="home-stats" aria-label="Knowledge statistics">
+        <section className="home-stats" aria-label={t('home.statsAria')}>
           {loading && !data
             ? Array.from({ length: 6 }, (_, index) => (
                 <div className="stat-tile" key={index}>
@@ -63,9 +66,9 @@ export function HomeView({ openView }: { openView: OpenView }) {
                 </div>
               ))
             : data &&
-              statLabels.map(({ key, label, accent }) => (
+              statLabels.map(({ key, labelKey, accent }) => (
                 <div key={key} className={`stat-tile ${accent ? 'stat-tile-accent' : ''}`}>
-                  <MicroLabel>{label}</MicroLabel>
+                  <MicroLabel>{t(labelKey)}</MicroLabel>
                   <strong>{String(data.stats[key] ?? 0).padStart(2, '0')}</strong>
                   <span className="stat-tile-rule" />
                   <span className="stat-tile-key">{key}</span>
@@ -76,32 +79,32 @@ export function HomeView({ openView }: { openView: OpenView }) {
         <div className="home-grid">
           <section className="panel-section home-actions">
             <div className="section-head">
-              <MicroLabel>Quick actions</MicroLabel>
+              <MicroLabel>{t('home.quickActions')}</MicroLabel>
               <span className="section-index">01</span>
             </div>
             <div className="quick-actions">
               <QuickAction
                 icon="bolt"
-                title="New capture"
-                description="Ingest text or a file"
+                title={t('home.newCapture')}
+                description={t('home.ingest')}
                 onClick={() => openView('capture')}
               />
               <QuickAction
                 icon="layers"
-                title="Cards"
-                description="Browse published assets"
+                title={t('home.cards')}
+                description={t('home.browseAssets')}
                 onClick={() => openView('cards')}
               />
               <QuickAction
                 icon="folder"
-                title="Dossiers"
-                description="Curate connected cards"
+                title={t('home.dossiers')}
+                description={t('home.curate')}
                 onClick={() => openView('dossiers')}
               />
               <QuickAction
                 icon="page"
-                title="Pages"
-                description="Read composed artifacts"
+                title={t('home.pages')}
+                description={t('home.readPages')}
                 onClick={() => openView('pages')}
               />
             </div>
@@ -109,13 +112,13 @@ export function HomeView({ openView }: { openView: OpenView }) {
 
           <section className="panel-section home-recent">
             <div className="section-head">
-              <MicroLabel>Recent assets</MicroLabel>
+              <MicroLabel>{t('home.recentAssets')}</MicroLabel>
               <button
                 type="button"
                 className="text-button"
                 onClick={() => openView('cards')}
               >
-                View all <Icon name="arrow-up-right" size={11} />
+                {t('common.viewAll')} <Icon name="arrow-up-right" size={11} />
               </button>
             </div>
             {loading && !data && (
@@ -133,11 +136,11 @@ export function HomeView({ openView }: { openView: OpenView }) {
             {!loading && data && data.assets.length === 0 && (
               <EmptyState
                 icon="layers"
-                title="No assets yet"
-                description="Capture an input and publish a card. Recent assets appear here."
+                title={t('home.noAssets')}
+                description={t('home.noAssetsBody')}
                 action={
                   <button type="button" className="button small primary" onClick={() => openView('capture')}>
-                    Start a capture
+                    {t('home.startCapture')}
                   </button>
                 }
                 compact
@@ -158,7 +161,7 @@ export function HomeView({ openView }: { openView: OpenView }) {
                     <div className="recent-copy">
                       <span className="recent-title">{asset.title}</span>
                       <span className="recent-meta">
-                        {asset.category || 'uncategorized'} · {relativeTime(asset.published_at)}
+                        {asset.category || t('home.uncategorized')} · {relativeTime(asset.published_at)}
                       </span>
                     </div>
                     <Icon name="chevron-right" size={12} className="recent-arrow" />
@@ -170,21 +173,21 @@ export function HomeView({ openView }: { openView: OpenView }) {
         </div>
 
         <section className="system-strip">
-          <MicroLabel>Pipeline</MicroLabel>
+          <MicroLabel>{t('home.pipeline')}</MicroLabel>
           <div className="pipeline-step">
-            <span className="pipeline-dot" /> Raw content
+            <span className="pipeline-dot" /> {t('home.pipelineRaw')}
           </div>
           <span className="pipeline-link">→</span>
           <div className="pipeline-step">
-            <span className="pipeline-dot" /> Draft
+            <span className="pipeline-dot" /> {t('home.pipelineDraft')}
           </div>
           <span className="pipeline-link">→</span>
           <div className="pipeline-step">
-            <span className="pipeline-dot accent" /> Card
+            <span className="pipeline-dot accent" /> {t('home.pipelineCard')}
           </div>
           <span className="pipeline-link">→</span>
           <div className="pipeline-step">
-            <span className="pipeline-dot" /> Dossier / Page
+            <span className="pipeline-dot" /> {t('home.pipelinePage')}
           </div>
         </section>
       </div>

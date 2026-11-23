@@ -12,6 +12,7 @@ import {
 import { useAsyncData } from '../hooks/useAsyncData'
 import type { OpenView, PageContent, PageDetailData, PageSection } from '../types'
 import { formatDate } from '../utils'
+import { useI18n } from '../i18n'
 
 function parseContent(value: PageDetailData['current']['content_json'] | undefined): {
   content: PageContent | null
@@ -39,6 +40,7 @@ export function PageReaderView({
   onClose: () => void
   openView: OpenView
 }) {
+  const { t } = useI18n()
   const { data, loading, error, reload } = useAsyncData<PageDetailData>(
     (signal) => api.page(pageId, signal),
     [pageId],
@@ -61,12 +63,12 @@ export function PageReaderView({
       <div className="view-scroll reader-scroll">
         <div className="reader-inner">
           <div className="reader-error-head">
-            <MicroLabel>Wiki / Pages / Reader</MicroLabel>
-            <h1>Page unavailable</h1>
+            <MicroLabel>{t('page.eyebrow')}</MicroLabel>
+            <h1>{t('page.unavailable')}</h1>
           </div>
           <ErrorBanner message={error} onRetry={reload} />
           <button type="button" className="button ghost" onClick={onClose}>
-            <Icon name="arrow-left" size={12} /> Back to pages
+            <Icon name="arrow-left" size={12} /> {t('page.back')}
           </button>
         </div>
       </div>
@@ -85,13 +87,13 @@ export function PageReaderView({
       <div className="reader-inner">
         <div className="reader-toolbar">
           <button type="button" className="back-link" onClick={onClose}>
-            <Icon name="arrow-left" size={12} /> Close reader
+            <Icon name="arrow-left" size={12} /> {t('page.closeReader')}
           </button>
           <div className="reader-toolbar-right">
             <span className="reader-toolbar-meta">
-              version {data.current?.version ?? data.page.version}
+              {t('common.version')} {data.current?.version ?? data.page.version}
             </span>
-            <button type="button" className="icon-button" onClick={onClose} aria-label="Close reader">
+            <button type="button" className="icon-button" onClick={onClose} aria-label={t('page.closeReader')}>
               <Icon name="x" size={14} />
             </button>
           </div>
@@ -99,31 +101,31 @@ export function PageReaderView({
 
         <article className="reader-sheet">
           <header className="reader-head">
-            <MicroLabel>Knowledge page</MicroLabel>
+            <MicroLabel>{t('page.knowledgePage')}</MicroLabel>
             <h1>{title}</h1>
             {content?.subtitle && <p className="reader-subtitle">{content.subtitle}</p>}
             <div className="reader-meta-row">
               <span>
-                <Icon name="page" size={11} /> PAGE {data.current?.id.slice(0, 8) ?? data.page.id.slice(0, 8)}
+                <Icon name="page" size={11} /> {t('page.page')} {data.current?.id.slice(0, 8) ?? data.page.id.slice(0, 8)}
               </span>
               <span>
-                <Icon name="database" size={11} /> {data.current?.model || 'model n/a'}
+                <Icon name="database" size={11} /> {data.current?.model || t('cards.modelNa')}
               </span>
-              <span>{data.current?.renderer || 'renderer n/a'}</span>
+              <span>{data.current?.renderer || t('page.rendererNa')}</span>
               <span>{formatDate(data.current?.created_at ?? data.page.updated_at)}</span>
               <Tag>v{data.current?.version ?? data.page.version}</Tag>
             </div>
           </header>
 
           {parsed.malformed && (
-            <ErrorBanner message="Page content_json could not be parsed. Showing available metadata only." />
+            <ErrorBanner message={t('page.parseError')} />
           )}
 
           {sections.length === 0 && !parsed.malformed && (
             <EmptyState
               icon="page"
-              title="No sections in this page"
-              description="The composed snapshot has no sections yet."
+              title={t('page.noSections')}
+              description={t('page.noSectionsBody')}
               compact
             />
           )}
@@ -135,7 +137,7 @@ export function PageReaderView({
                   <span className="reader-section-index">
                     {String(index + 1).padStart(2, '0')}
                   </span>
-                  <h2>{section.heading || 'Untitled section'}</h2>
+                  <h2>{section.heading || t('page.untitledSection')}</h2>
                 </div>
                 <div className="reader-section-body">
                   <Markdown source={section.body} />
@@ -148,16 +150,16 @@ export function PageReaderView({
                           type="button"
                           className="reader-figure-image"
                           onClick={() => openView('card', { id: card.id }, card.title)}
-                          title={`Open ${card.title}`}
+                          title={`${t('page.open')} ${card.title}`}
                         >
                           <ArtifactImage asset={card} />
                         </button>
                         <figcaption>
                           <div className="reader-figure-copy">
                             <strong>{card.title}</strong>
-                            <span>{card.summary || 'Card artifact'}</span>
+                            <span>{card.summary || t('page.cardArtifact')}</span>
                           </div>
-                          <Tag tone="accent">{card.category || 'uncategorized'}</Tag>
+                          <Tag tone="accent">{card.category || t('home.uncategorized')}</Tag>
                         </figcaption>
                       </figure>
                     ))}
@@ -169,13 +171,13 @@ export function PageReaderView({
 
           <footer className="reader-foot">
             <div>
-              <MicroLabel>Source cards</MicroLabel>
+              <MicroLabel>{t('page.sourceCards')}</MicroLabel>
               <span>
-                {data.current?.source_asset_ids?.length ?? 0} assets linked to this snapshot
+                {t('page.assetsLinkedCount', { count: data.current?.source_asset_ids?.length ?? 0 })}
               </span>
             </div>
             <button type="button" className="button ghost small" onClick={onClose}>
-              Close reader <Icon name="x" size={11} />
+              {t('page.closeReader')} <Icon name="x" size={11} />
             </button>
           </footer>
         </article>

@@ -13,9 +13,11 @@ import {
 import { useAsyncData } from '../hooks/useAsyncData'
 import type { DossierSummary, OpenView } from '../types'
 import { formatDate, relativeTime } from '../utils'
+import { useI18n } from '../i18n'
 
 export function DossiersView({ openView }: { openView: OpenView }) {
   const { notify } = useToast()
+  const { t } = useI18n()
   const { data, loading, error, reload } = useAsyncData<DossierSummary[]>(
     (signal) => api.dossiers(signal),
     [],
@@ -39,7 +41,7 @@ export function DossiersView({ openView }: { openView: OpenView }) {
       setName('')
       setDescription('')
       reload()
-      notify('Dossier created.', 'success')
+      notify(t('dossiers.toastCreated'), 'success')
       openView('dossier', { id: dossier.id }, dossier.name)
     } catch (caught) {
       setCreateError(errorMessage(caught))
@@ -52,16 +54,16 @@ export function DossiersView({ openView }: { openView: OpenView }) {
     <div className="view-scroll">
       <div className="view-inner">
         <ViewHeader
-          eyebrow="Wiki / Dossiers"
-          title="Dossiers"
-          description="Curated sets of cards. Shared tags form the edges of each dossier graph."
+          eyebrow={t('dossiers.eyebrow')}
+          title={t('dossiers.title')}
+          description={t('dossiers.description')}
           actions={
             <>
               <button type="button" className="button ghost" onClick={reload}>
-                <Icon name="refresh" size={13} /> Refresh
+                <Icon name="refresh" size={13} /> {t('common.refresh')}
               </button>
               <button type="button" className="button primary" onClick={() => setCreateOpen(true)}>
-                <Icon name="plus" size={13} /> New dossier
+                <Icon name="plus" size={13} /> {t('dossiers.new')}
               </button>
             </>
           }
@@ -82,11 +84,11 @@ export function DossiersView({ openView }: { openView: OpenView }) {
         {!loading && dossiers.length === 0 && (
           <EmptyState
             icon="folder"
-            title="No dossiers yet"
-            description="Group related cards into a dossier to build a knowledge graph and compose a page."
+            title={t('dossiers.empty')}
+            description={t('dossiers.emptyBody')}
             action={
               <button type="button" className="button primary" onClick={() => setCreateOpen(true)}>
-                <Icon name="plus" size={13} /> Create dossier
+                <Icon name="plus" size={13} /> {t('dossiers.create')}
               </button>
             }
           />
@@ -110,11 +112,11 @@ export function DossiersView({ openView }: { openView: OpenView }) {
                   </span>
                 </div>
                 <h3>{dossier.name}</h3>
-                <p>{dossier.description || 'No description.'}</p>
+                <p>{dossier.description || t('common.noDescription')}</p>
                 <div className="dossier-tile-foot">
                   <span>
                     <Icon name="layers" size={11} />
-                    {dossier.card_count} cards
+                    {t('dossiers.cardsCount', { count: dossier.card_count })}
                   </span>
                   <span title={formatDate(dossier.updated_at)}>
                     {relativeTime(dossier.updated_at)}
@@ -124,7 +126,7 @@ export function DossiersView({ openView }: { openView: OpenView }) {
                   <span style={{ width: `${Math.min(100, dossier.card_count * 9 + 8)}%` }} />
                 </div>
                 <span className="dossier-open">
-                  Open graph <Icon name="arrow-up-right" size={11} />
+                  {t('dossiers.openGraph')} <Icon name="arrow-up-right" size={11} />
                 </span>
               </button>
             ))}
@@ -132,18 +134,15 @@ export function DossiersView({ openView }: { openView: OpenView }) {
         )}
 
         <div className="page-footnote">
-          <MicroLabel>Note</MicroLabel>
-          <p>
-            A dossier keeps cards together but does not alter the underlying assets. Pages are
-            immutable snapshots composed from a dossier.
-          </p>
+          <MicroLabel>{t('dossiers.noteTitle')}</MicroLabel>
+          <p>{t('dossiers.note')}</p>
         </div>
       </div>
 
       {createOpen && (
         <Modal
-          title="New dossier"
-          eyebrow="Wiki / Dossiers"
+          title={t('dossiers.new')}
+          eyebrow={t('dossiers.eyebrow')}
           onClose={() => {
             setCreateOpen(false)
             setCreateError(null)
@@ -155,7 +154,7 @@ export function DossiersView({ openView }: { openView: OpenView }) {
                 className="button ghost"
                 onClick={() => setCreateOpen(false)}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
@@ -163,7 +162,7 @@ export function DossiersView({ openView }: { openView: OpenView }) {
                 className="button primary"
                 disabled={creating || !name.trim()}
               >
-                {creating ? 'Creating…' : 'Create dossier'}
+                {creating ? t('common.creating') : t('dossiers.create')}
               </button>
             </>
           }
@@ -171,20 +170,20 @@ export function DossiersView({ openView }: { openView: OpenView }) {
           <form id="create-dossier-form" className="modal-form" onSubmit={create}>
             <div className="field">
               <label className="field-label" htmlFor="dossier-name">
-                Name
+                {t('dossiers.name')}
               </label>
               <input
                 id="dossier-name"
                 className="input"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="e.g. Local-first agents"
+                placeholder={t('dossiers.namePlaceholder')}
                 autoFocus
               />
             </div>
             <div className="field">
               <label className="field-label" htmlFor="dossier-description">
-                Description
+                {t('dossiers.descriptionField')}
               </label>
               <textarea
                 id="dossier-description"
@@ -192,7 +191,7 @@ export function DossiersView({ openView }: { openView: OpenView }) {
                 rows={3}
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                placeholder="What binds these cards together?"
+                placeholder={t('dossiers.descriptionPlaceholder')}
               />
             </div>
             {createError && <ErrorBanner message={createError} />}

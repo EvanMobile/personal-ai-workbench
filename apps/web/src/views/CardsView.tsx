@@ -12,6 +12,8 @@ import {
 import { useAsyncData } from '../hooks/useAsyncData'
 import type { Asset, Draft, OpenView } from '../types'
 import { relativeTime, sortAssetsNewest } from '../utils'
+import { useI18n } from '../i18n'
+import type { MessageKey } from '../i18n/messages'
 
 interface CardsData {
   assets: Asset[]
@@ -20,13 +22,14 @@ interface CardsData {
 
 type CardFilter = 'all' | 'unarchived' | 'archived'
 
-const filters: Array<{ id: CardFilter; label: string }> = [
-  { id: 'all', label: 'All' },
-  { id: 'unarchived', label: 'Unarchived' },
-  { id: 'archived', label: 'Archived' },
+const filters: Array<{ id: CardFilter; labelKey: MessageKey }> = [
+  { id: 'all', labelKey: 'cards.all' },
+  { id: 'unarchived', labelKey: 'cards.unarchived' },
+  { id: 'archived', labelKey: 'cards.archived' },
 ]
 
 export function CardsView({ openView }: { openView: OpenView }) {
+  const { t } = useI18n()
   const { data, loading, error, reload } = useAsyncData<CardsData>(async (signal) => {
     // Assets are the primary data. Draft metadata only enriches the model label,
     // so a drafts failure must not blank the whole library.
@@ -60,22 +63,22 @@ export function CardsView({ openView }: { openView: OpenView }) {
     <div className="view-scroll">
       <div className="view-inner">
         <ViewHeader
-          eyebrow="Wiki / Cards"
-          title="Card library"
-          description="Published knowledge assets, each backed by a draft and generated artifact."
+          eyebrow={t('cards.eyebrow')}
+          title={t('cards.title')}
+          description={t('cards.description')}
           actions={
             <>
               <button type="button" className="button ghost" onClick={reload}>
-                <Icon name="refresh" size={13} /> Refresh
+                <Icon name="refresh" size={13} /> {t('common.refresh')}
               </button>
               <button type="button" className="button primary" onClick={() => openView('capture')}>
-                <Icon name="bolt" size={13} /> Capture
+                <Icon name="bolt" size={13} /> {t('common.capture')}
               </button>
             </>
           }
         />
 
-        <div className="filter-bar" role="tablist" aria-label="Card filters">
+        <div className="filter-bar" role="tablist" aria-label={t('cards.filters')}>
           {filters.map((item) => (
             <button
               key={item.id}
@@ -85,13 +88,13 @@ export function CardsView({ openView }: { openView: OpenView }) {
               className={`filter-tab ${filter === item.id ? 'filter-tab-active' : ''}`}
               onClick={() => setFilter(item.id)}
             >
-              {item.label}
+              {t(item.labelKey)}
               <span className="filter-count">{String(counts[item.id]).padStart(2, '0')}</span>
             </button>
           ))}
           <span className="filter-spacer" />
           <span className="filter-meta">
-            SORT <strong>CREATED ↓</strong>
+            {t('common.sort')} <strong>{t('common.sortCreated')}</strong>
           </span>
         </div>
 
@@ -110,20 +113,20 @@ export function CardsView({ openView }: { openView: OpenView }) {
             icon={filter === 'archived' ? 'archive' : 'layers'}
             title={
               filter === 'archived'
-                ? 'No archived cards'
+                ? t('cards.noArchived')
                 : filter === 'unarchived'
-                  ? 'No active cards'
-                  : 'No cards yet'
+                  ? t('cards.noActive')
+                  : t('cards.noCards')
             }
             description={
               filter === 'archived'
-                ? 'Cards you archive will be collected here.'
-                : 'Publish a draft to add the first card to the library.'
+                ? t('cards.archivedBody')
+                : t('cards.emptyBody')
             }
             action={
               filter !== 'archived' ? (
                 <button type="button" className="button primary" onClick={() => openView('capture')}>
-                  <Icon name="bolt" size={13} /> Start a capture
+                  <Icon name="bolt" size={13} /> {t('cards.startCapture')}
                 </button>
               ) : undefined
             }
@@ -156,25 +159,26 @@ function CardTile({
   model?: string
   onClick: () => void
 }) {
+  const { t } = useI18n()
   return (
     <button type="button" className="card-tile" onClick={onClick}>
       <div className="card-tile-artifact">
         <ArtifactImage asset={asset} />
         <span className="card-tile-open">
-          <Icon name="arrow-up-right" size={11} /> inspect
+          <Icon name="arrow-up-right" size={11} /> {t('cards.inspect')}
         </span>
       </div>
       <div className="card-tile-body">
         <div className="card-tile-tags">
-          <Tag tone="accent">{asset.category || 'uncategorized'}</Tag>
-          {asset.archived && <Tag tone="muted">archived</Tag>}
+          <Tag tone="accent">{asset.category || t('home.uncategorized')}</Tag>
+          {asset.archived && <Tag tone="muted">{t('common.archived')}</Tag>}
         </div>
         <h3>{asset.title}</h3>
         {asset.summary && <p>{asset.summary}</p>}
         <div className="card-tile-foot">
           <span>
             <Icon name="database" size={10} />
-            {asset.model || model || 'model n/a'}
+            {asset.model || model || t('cards.modelNa')}
           </span>
           <span>{relativeTime(asset.created_at ?? asset.published_at)}</span>
         </div>

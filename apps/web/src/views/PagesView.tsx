@@ -15,6 +15,7 @@ import {
 import { useAsyncData } from '../hooks/useAsyncData'
 import type { Asset, DossierSummary, OpenView, PageSummary } from '../types'
 import { formatDate, relativeTime } from '../utils'
+import { useI18n } from '../i18n'
 
 interface PagesData {
   pages: PageSummary[]
@@ -24,6 +25,7 @@ interface PagesData {
 
 export function PagesView({ openView }: { openView: OpenView }) {
   const { notify } = useToast()
+  const { t } = useI18n()
   const { data, loading, error, reload } = useAsyncData<PagesData>(async (signal) => {
     const [pages, assets, dossiers] = await Promise.all([
       api.pages(signal),
@@ -59,7 +61,7 @@ export function PagesView({ openView }: { openView: OpenView }) {
     try {
       const created = await api.createPage(dossierId, title.trim() || undefined)
       setCreateOpen(false)
-      notify('Page created.', 'success')
+      notify(t('pages.toastCreated'), 'success')
       reload()
       openView('page', { id: created.page.id }, created.page.title)
     } catch (caught) {
@@ -73,22 +75,22 @@ export function PagesView({ openView }: { openView: OpenView }) {
     <div className="view-scroll">
       <div className="view-inner">
         <ViewHeader
-          eyebrow="Wiki / Pages"
-          title="Page archive"
-          description="Composed, versioned snapshots of a dossier — built to be read, not edited in place."
+          eyebrow={t('pages.eyebrow')}
+          title={t('pages.title')}
+          description={t('pages.description')}
           actions={
             <>
               <button type="button" className="button ghost" onClick={reload}>
-                <Icon name="refresh" size={13} /> Refresh
+                <Icon name="refresh" size={13} /> {t('common.refresh')}
               </button>
               <button
                 type="button"
                 className="button primary"
                 onClick={openCreate}
                 disabled={dossiers.length === 0}
-                title={dossiers.length === 0 ? 'Create a dossier first' : 'Create a page'}
+                title={dossiers.length === 0 ? t('pages.createDossierFirst') : t('pages.createPage')}
               >
-                <Icon name="plus" size={13} /> New page
+                <Icon name="plus" size={13} /> {t('pages.newPage')}
               </button>
             </>
           }
@@ -110,20 +112,20 @@ export function PagesView({ openView }: { openView: OpenView }) {
         {!loading && pages.length === 0 && (
           <EmptyState
             icon="page"
-            title="No pages composed"
+            title={t('pages.empty')}
             description={
               dossiers.length === 0
-                ? 'Create a dossier and add cards. Pages are composed from a dossier graph.'
-                : 'Open a dossier and create a page from its cards.'
+                ? t('pages.emptyBody')
+                : t('pages.emptyHint')
             }
             action={
               dossiers.length === 0 ? (
                 <button type="button" className="button primary" onClick={() => openView('dossiers')}>
-                  <Icon name="folder" size={13} /> Open dossiers
+                  <Icon name="folder" size={13} /> {t('pages.openDossiers')}
                 </button>
               ) : (
                 <button type="button" className="button primary" onClick={openCreate}>
-                  <Icon name="plus" size={13} /> Compose page
+                  <Icon name="plus" size={13} /> {t('pages.compose')}
                 </button>
               )
             }
@@ -149,7 +151,7 @@ export function PagesView({ openView }: { openView: OpenView }) {
                         <span className="page-cover-glyph">
                           <Icon name="page" size={22} />
                         </span>
-                        <span>no cover artifact</span>
+                        <span>{t('pages.noCover')}</span>
                       </div>
                     )}
                     <span className="page-number">P.{String(index + 1).padStart(2, '0')}</span>
@@ -163,7 +165,7 @@ export function PagesView({ openView }: { openView: OpenView }) {
                     <div className="page-tile-foot">
                       <span>
                         <Icon name="folder" size={11} />
-                        dossier {page.dossier_id.slice(0, 8)}
+                        {t('pages.sourceDossier')} {page.dossier_id.slice(0, 8)}
                       </span>
                       <span>{formatDate(page.updated_at)}</span>
                     </div>
@@ -175,23 +177,20 @@ export function PagesView({ openView }: { openView: OpenView }) {
         )}
 
         <div className="page-footnote">
-          <MicroLabel>Archive</MicroLabel>
-          <p>
-            Pages preserve their source card IDs and content snapshot. Use the dossier graph to
-            compose a new version.
-          </p>
+          <MicroLabel>{t('common.archive')}</MicroLabel>
+          <p>{t('pages.note')}</p>
         </div>
       </div>
 
       {createOpen && (
         <Modal
-          title="Compose a page"
-          eyebrow="Wiki / Pages"
+          title={t('pages.composeTitle')}
+          eyebrow={t('pages.eyebrow')}
           onClose={() => setCreateOpen(false)}
           footer={
             <>
               <button type="button" className="button ghost" onClick={() => setCreateOpen(false)}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
@@ -199,7 +198,7 @@ export function PagesView({ openView }: { openView: OpenView }) {
                 className="button primary"
                 disabled={creating || !dossierId}
               >
-                {creating ? 'Composing…' : 'Create page'}
+                {creating ? t('common.composing') : t('pages.createPage')}
               </button>
             </>
           }
@@ -207,7 +206,7 @@ export function PagesView({ openView }: { openView: OpenView }) {
           <form id="create-page-form" className="modal-form" onSubmit={create}>
             <div className="field">
               <label className="field-label" htmlFor="page-dossier">
-                Source dossier
+                {t('pages.sourceDossier')}
               </label>
               <select
                 id="page-dossier"
@@ -218,21 +217,21 @@ export function PagesView({ openView }: { openView: OpenView }) {
               >
                 {dossiers.map((dossier) => (
                   <option key={dossier.id} value={dossier.id}>
-                    {dossier.name} · {dossier.card_count} cards
+                    {dossier.name} · {t('pages.cardsCount', { count: dossier.card_count })}
                   </option>
                 ))}
               </select>
             </div>
             <div className="field">
               <label className="field-label" htmlFor="page-title">
-                Title <span className="field-optional">optional</span>
+                {t('pages.titleField')} <span className="field-optional">{t('common.optional')}</span>
               </label>
               <input
                 id="page-title"
                 className="input"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder="Model composes a title when empty"
+                placeholder={t('pages.titlePlaceholder')}
               />
             </div>
             {createError && <ErrorBanner message={createError} />}

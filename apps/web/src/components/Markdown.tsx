@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useI18n } from '../i18n'
 
 interface MarkdownProps {
   source: string | null | undefined
@@ -199,8 +200,9 @@ function inline(text: string, blockKey: string): ReactNode[] {
 }
 
 export function Markdown({ source, className }: MarkdownProps) {
+  const { t } = useI18n()
   if (!source || !source.trim()) {
-    return <p className={`md md-empty ${className ?? ''}`.trim()}>No content recorded.</p>
+    return <p className={`md md-empty ${className ?? ''}`.trim()}>{t('component.noContent')}</p>
   }
 
   const blocks = parseBlocks(source)

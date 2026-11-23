@@ -3,6 +3,7 @@ import type { OpenView, ViewKind, WorkspaceTab } from '../types'
 import { cx } from '../utils'
 import { Icon, type IconName } from './Icon'
 import { MicroLabel } from './ui'
+import { useI18n } from '../i18n'
 
 interface ContextTreeProps {
   activeTab: WorkspaceTab | null
@@ -15,6 +16,7 @@ function activeClass(activeTab: WorkspaceTab | null, kind: ViewKind): string {
 }
 
 export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps) {
+  const { t } = useI18n()
   const [replayOpen, setReplayOpen] = useState(false)
   const [arsenalOpen, setArsenalOpen] = useState(false)
   const [wikiOpen, setWikiOpen] = useState(true)
@@ -25,13 +27,13 @@ export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps
 
   const openWikiRoot = () => {
     setWikiOpen(true)
-    openView('dossiers', undefined, 'Dossiers')
+    openView('dossiers', undefined, t('nav.dossiers'))
   }
 
   return (
-    <aside className="context-panel" aria-label="Context directory">
+    <aside className="context-panel" aria-label={t('nav.contextDirectory')}>
       <div className="panel-head">
-        <MicroLabel>Context directory</MicroLabel>
+        <MicroLabel>{t('nav.contextDirectory')}</MicroLabel>
         <span className="panel-head-mark">CTX</span>
       </div>
 
@@ -47,8 +49,8 @@ export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps
           <span className="tree-icon tree-icon-accent">
             <Icon name="workbench" size={15} />
           </span>
-          <span className="tree-label">Workbench</span>
-          <span className="tree-root-badge">ROOT</span>
+          <span className="tree-label">{t('nav.workbench')}</span>
+          <span className="tree-root-badge">{t('nav.root')}</span>
         </button>
 
         <div className="tree-children">
@@ -57,7 +59,7 @@ export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps
             <span className="tree-icon">
               <Icon name="grid" size={13} />
             </span>
-            <span className="tree-label">Overview</span>
+            <span className="tree-label">{t('nav.overview')}</span>
           </button>
 
           <div className="tree-group">
@@ -65,7 +67,7 @@ export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps
               <button
                 type="button"
                 className="tree-chevron-button"
-                aria-label={replayOpen ? 'Collapse Project Replay' : 'Expand Project Replay'}
+                aria-label={replayOpen ? t('nav.collapseReplay') : t('nav.expandReplay')}
                 aria-expanded={replayOpen}
                 onClick={() => setReplayOpen((value) => !value)}
               >
@@ -76,20 +78,20 @@ export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps
                 className={cx('tree-product-label', activeTab?.kind === 'project-replay' && 'active')}
                 onClick={() => {
                   setReplayOpen(true)
-                  openProduct('project-replay', 'Project Replay')
+                  openProduct('project-replay', t('nav.projectReplay'))
                 }}
               >
                 <span className="tree-icon">
                   <Icon name="terminal" size={13} />
                 </span>
-                <span className="tree-label">Project Replay</span>
+                <span className="tree-label">{t('nav.projectReplay')}</span>
                 <span className="tree-count">0</span>
               </button>
             </div>
             {replayOpen && (
               <div className="tree-empty-row">
                 <span className="tree-branch">└</span>
-                <span>No projects yet</span>
+                <span>{t('nav.noProjects')}</span>
               </div>
             )}
           </div>
@@ -99,7 +101,7 @@ export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps
               <button
                 type="button"
                 className="tree-chevron-button"
-                aria-label={arsenalOpen ? 'Collapse Personal Arsenal' : 'Expand Personal Arsenal'}
+                aria-label={arsenalOpen ? t('nav.collapseArsenal') : t('nav.expandArsenal')}
                 aria-expanded={arsenalOpen}
                 onClick={() => setArsenalOpen((value) => !value)}
               >
@@ -110,20 +112,20 @@ export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps
                 className={cx('tree-product-label', activeTab?.kind === 'arsenal' && 'active')}
                 onClick={() => {
                   setArsenalOpen(true)
-                  openProduct('arsenal', 'Personal Arsenal')
+                  openProduct('arsenal', t('nav.personalArsenal'))
                 }}
               >
                 <span className="tree-icon">
                   <Icon name="layers" size={13} />
                 </span>
-                <span className="tree-label">Personal Arsenal</span>
+                <span className="tree-label">{t('nav.personalArsenal')}</span>
                 <span className="tree-count">0</span>
               </button>
             </div>
             {arsenalOpen && (
               <div className="tree-empty-row">
                 <span className="tree-branch">└</span>
-                <span>No tools catalogued yet</span>
+                <span>{t('nav.noTools')}</span>
               </div>
             )}
           </div>
@@ -133,7 +135,7 @@ export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps
               <button
                 type="button"
                 className="tree-chevron-button"
-                aria-label={wikiOpen ? 'Collapse Personal LLM Wiki' : 'Expand Personal LLM Wiki'}
+                aria-label={wikiOpen ? t('nav.collapseWiki') : t('nav.expandWiki')}
                 aria-expanded={wikiOpen}
                 onClick={() => setWikiOpen((value) => !value)}
               >
@@ -143,12 +145,12 @@ export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps
                 type="button"
                 className="tree-product-label"
                 onClick={openWikiRoot}
-                title="Open knowledge base"
+                title={t('nav.openWiki')}
               >
                 <span className="tree-icon">
                   <Icon name="book" size={13} />
                 </span>
-                <span className="tree-label">Personal LLM Wiki</span>
+                <span className="tree-label">{t('nav.personalWiki')}</span>
               </button>
             </div>
 
@@ -156,19 +158,19 @@ export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps
               <div className="tree-subtree">
                 <TreeLeaf
                   icon="folder"
-                  label="Dossiers"
+                  label={t('nav.dossiers')}
                   active={activeTab?.kind === 'dossiers' || activeTab?.kind === 'dossier'}
                   onClick={() => openView('dossiers')}
                 />
                 <TreeLeaf
                   icon="layers"
-                  label="Cards"
+                  label={t('nav.cards')}
                   active={activeTab?.kind === 'cards' || activeTab?.kind === 'card'}
                   onClick={() => openView('cards')}
                 />
                 <TreeLeaf
                   icon="page"
-                  label="Pages"
+                  label={t('nav.pages')}
                   active={activeTab?.kind === 'pages' || activeTab?.kind === 'page'}
                   onClick={() => openView('pages')}
                 />
@@ -187,7 +189,7 @@ export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps
             <span className="tree-icon tree-icon-capture">
               <Icon name="bolt" size={13} />
             </span>
-            <span className="tree-label">Capture</span>
+            <span className="tree-label">{t('nav.capture')}</span>
             <span className="shortcut-hint">⌘N</span>
           </button>
         </div>
@@ -195,17 +197,17 @@ export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps
 
       <div className="context-footer">
         <div className="context-footer-row">
-          <span className="micro-label">Session</span>
-          <span className="session-id">LOCAL</span>
+          <span className="micro-label">{t('nav.session')}</span>
+          <span className="session-id">{t('nav.local')}</span>
         </div>
         <div className="context-footer-row">
           <span className={cx('api-dot', `api-dot-${apiStatus}`)} />
           <span className="context-status">
-            {apiStatus === 'online' ? 'API connected' : apiStatus === 'offline' ? 'API offline' : 'Checking API…'}
+            {apiStatus === 'online' ? t('nav.apiConnected') : apiStatus === 'offline' ? t('nav.apiOffline') : t('nav.apiChecking')}
           </span>
           <Icon name="database" size={12} className="context-db-icon" />
         </div>
-        <div className="context-footer-meta">P1.M1 · CONTEXT ENGINE</div>
+        <div className="context-footer-meta">{t('nav.phase')}</div>
       </div>
     </aside>
   )

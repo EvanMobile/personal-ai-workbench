@@ -16,6 +16,7 @@ import {
 import { useAsyncData } from '../hooks/useAsyncData'
 import type { Asset, DossierSummary, Draft, OpenView, RawContent } from '../types'
 import { cx, formatDate, shortId } from '../utils'
+import { useI18n } from '../i18n'
 
 type AssetDetail = Asset & { raw_content?: RawContent; draft?: Draft }
 
@@ -27,6 +28,7 @@ export function CardDetailView({
   openView: OpenView
 }) {
   const { notify } = useToast()
+  const { t } = useI18n()
   const { data: asset, loading, error, reload, setData } = useAsyncData<AssetDetail>(
     (signal) => api.asset(assetId, signal),
     [assetId],
@@ -76,7 +78,7 @@ export function CardDetailView({
       })
       setData((previous) => (previous ? { ...previous, ...updated } : updated))
       setEditOpen(false)
-      notify('Card metadata updated.', 'success')
+      notify(t('card.toastUpdated'), 'success')
     } catch (caught) {
       setModalError(errorMessage(caught))
     } finally {
@@ -94,7 +96,7 @@ export function CardDetailView({
       })
       setData((previous) => (previous ? { ...previous, ...updated } : updated))
       setMoveOpen(false)
-      notify(selectedDossier ? 'Card moved to dossier.' : 'Card removed from dossiers.', 'success')
+      notify(selectedDossier ? t('card.toastMoved') : t('card.toastRemoved'), 'success')
     } catch (caught) {
       setModalError(errorMessage(caught))
     } finally {
@@ -108,7 +110,7 @@ export function CardDetailView({
     try {
       const updated = await api.patchAsset(asset.id, { archived: !asset.archived })
       setData((previous) => (previous ? { ...previous, ...updated } : updated))
-      notify(updated.archived ? 'Card archived.' : 'Card restored.', 'success')
+      notify(updated.archived ? t('card.toastArchived') : t('card.toastRestored'), 'success')
     } catch (caught) {
       notify(errorMessage(caught), 'danger')
     } finally {
@@ -122,7 +124,7 @@ export function CardDetailView({
     try {
       await api.regenerateArtifact(asset.artifact.id)
       reload()
-      notify('Artifact regeneration started.', 'success')
+      notify(t('card.toastRegenerating'), 'success')
     } catch (caught) {
       notify(errorMessage(caught), 'danger')
     } finally {
@@ -150,9 +152,9 @@ export function CardDetailView({
       <div className="view-scroll">
         <div className="view-inner">
           <ViewHeader
-            eyebrow="Wiki / Cards / Detail"
-            title="Card unavailable"
-            back={{ label: 'Cards', onClick: () => openView('cards') }}
+            eyebrow={t('card.eyebrow')}
+            title={t('card.unavailable')}
+            back={{ label: t('nav.cards'), onClick: () => openView('cards') }}
           />
           <ErrorBanner message={error} onRetry={reload} />
         </div>
@@ -171,17 +173,17 @@ export function CardDetailView({
     <div className="view-scroll">
       <div className="view-inner">
         <ViewHeader
-          eyebrow="Wiki / Cards / Detail"
+          eyebrow={t('card.eyebrow')}
           title={asset.title}
-          description={asset.summary || 'Published knowledge asset'}
-          back={{ label: 'Card library', onClick: () => openView('cards') }}
+          description={asset.summary || t('card.publishedAsset')}
+          back={{ label: t('card.library'), onClick: () => openView('cards') }}
           actions={
             <>
               <button type="button" className="button ghost" onClick={openEdit}>
-                <Icon name="edit" size={13} /> Edit
+                <Icon name="edit" size={13} /> {t('common.edit')}
               </button>
               <button type="button" className="button ghost" onClick={openMove}>
-                <Icon name="folder" size={13} /> Move
+                <Icon name="folder" size={13} /> {t('common.move')}
               </button>
               <button
                 type="button"
@@ -190,7 +192,7 @@ export function CardDetailView({
                 disabled={actionBusy === 'archive'}
               >
                 <Icon name="archive" size={13} />
-                {asset.archived ? 'Restore' : 'Archive'}
+                {asset.archived ? t('common.restore') : t('common.archive')}
               </button>
             </>
           }
@@ -200,24 +202,20 @@ export function CardDetailView({
 
         {asset.is_mock === true && (
           <div className="provenance-banner provenance-mock">
-            <strong>MOCK · 规则模拟 · 未调用真实 LLM</strong>
-            <span>
-              本知识卡片由本地规则引擎生成，不代表真实 AI 语义分析结果。 · provider {asset.provider ?? 'unknown'} · model {model} · prompt {asset.prompt_version ?? 'unknown'}
-            </span>
+            <strong>{t('card.mockTitle')}</strong>
+            <span>{t('card.mockBody')} · {t('common.provider')} {asset.provider ?? t('common.unknown')} · {t('common.model')} {model} · {t('common.prompt')} {asset.prompt_version ?? t('common.unknown')}</span>
           </div>
         )}
         {asset.is_mock === null && (
           <div className="provenance-banner provenance-unknown">
-            <strong>UNKNOWN · 历史来源未知</strong>
-            <span>
-              该记录缺少可验证的 Provider 信息，不能视为真实 LLM 分析。 · provider {asset.provider ?? 'unknown'} · model {model}
-            </span>
+            <strong>{t('card.unknownTitle')}</strong>
+            <span>{t('card.unknownBody')} · {t('common.provider')} {asset.provider ?? t('common.unknown')} · {t('common.model')} {model}</span>
           </div>
         )}
         {asset.is_mock === false && (
           <div className="provenance-banner provenance-real">
-            <strong>REAL PROVIDER · {asset.provider ?? 'unknown'}</strong>
-            <span>model {model} · prompt {asset.prompt_version ?? 'unknown'} · mode {asset.processing_mode ?? 'unknown'}</span>
+            <strong>{t('card.realProvider')} · {asset.provider ?? t('common.unknown')}</strong>
+            <span>{t('common.model')} {model} · {t('common.prompt')} {asset.prompt_version ?? t('common.unknown')} · {t('common.mode')} {asset.processing_mode ?? t('common.unknown')}</span>
           </div>
         )}
 
@@ -226,10 +224,10 @@ export function CardDetailView({
             <section className="detail-artifact">
               <div className="artifact-toolbar">
                 <div className="artifact-toolbar-left">
-                  <MicroLabel>Artifact</MicroLabel>
+                  <MicroLabel>{t('card.artifact')}</MicroLabel>
                   <span className="artifact-status">
                     <span className={cx('api-dot', asset.artifact ? 'api-dot-online' : 'api-dot-offline')} />
-                    {asset.artifact?.status ?? 'not generated'}
+                    {asset.artifact?.status ? (asset.artifact.status === 'ready' ? t('common.ready') : asset.artifact.status === 'failed' ? t('status.failed') : asset.artifact.status) : t('card.notGenerated')}
                   </span>
                 </div>
                 <div className="artifact-toolbar-right">
@@ -244,8 +242,8 @@ export function CardDetailView({
                       className="icon-button"
                       onClick={regenerate}
                       disabled={actionBusy === 'artifact'}
-                      title="Regenerate artifact"
-                      aria-label="Regenerate artifact"
+                      title={t('card.regenerate')}
+                      aria-label={t('card.regenerate')}
                     >
                       <Icon name="refresh" size={12} />
                     </button>
@@ -259,16 +257,16 @@ export function CardDetailView({
 
             <section className="detail-section">
               <div className="section-head">
-                <MicroLabel>Summary</MicroLabel>
+                <MicroLabel>{t('card.summary')}</MicroLabel>
                 <span className="section-index">01</span>
               </div>
-              <p className="detail-lead">{asset.summary || 'No summary recorded for this card.'}</p>
+              <p className="detail-lead">{asset.summary || t('card.noSummary')}</p>
             </section>
 
             {asset.conclusion && (
               <section className="detail-section conclusion-block">
                 <div className="section-head">
-                  <MicroLabel>Conclusion</MicroLabel>
+                  <MicroLabel>{t('card.conclusion')}</MicroLabel>
                   <span className="section-index">02</span>
                 </div>
                 <p>{asset.conclusion}</p>
@@ -277,7 +275,7 @@ export function CardDetailView({
 
             <section className="detail-section">
               <div className="section-head">
-                <MicroLabel>Body</MicroLabel>
+                <MicroLabel>{t('card.body')}</MicroLabel>
                 <span className="section-index">03</span>
               </div>
               <div className="prose-shell">
@@ -288,7 +286,7 @@ export function CardDetailView({
             {asset.tags.length > 0 && (
               <section className="detail-section">
                 <div className="section-head">
-                  <MicroLabel>Tags</MicroLabel>
+                  <MicroLabel>{t('card.tags')}</MicroLabel>
                 </div>
                 <div className="tag-row">
                   {asset.tags.map((tag) => (
@@ -302,62 +300,62 @@ export function CardDetailView({
           <aside className="card-detail-side">
             <div className="side-panel">
               <div className="side-panel-head">
-                <MicroLabel>Asset record</MicroLabel>
-                {asset.archived ? <Tag tone="muted">archived</Tag> : <Tag tone="success">active</Tag>}
+                <MicroLabel>{t('card.assetRecord')}</MicroLabel>
+                {asset.archived ? <Tag tone="muted">{t('common.archived')}</Tag> : <Tag tone="success">{t('common.active')}</Tag>}
               </div>
               <dl className="meta-list">
                 <div>
-                  <dt>asset</dt>
+                  <dt>{t('common.asset')}</dt>
                   <dd title={asset.id}>{shortId(asset.id, 14)}</dd>
                 </div>
                 <div>
-                  <dt>draft</dt>
+                  <dt>{t('common.draft')}</dt>
                   <dd title={asset.draft_id}>{shortId(asset.draft_id, 14)}</dd>
                 </div>
                 <div>
-                  <dt>raw content</dt>
+                  <dt>{t('common.rawContent')}</dt>
                   <dd title={asset.raw_content_id}>{shortId(asset.raw_content_id, 14)}</dd>
                 </div>
                 <div>
-                  <dt>category</dt>
+                  <dt>{t('common.category')}</dt>
                   <dd>
-                    <Tag tone="accent">{asset.category || 'uncategorized'}</Tag>
+                    <Tag tone="accent">{asset.category || t('home.uncategorized')}</Tag>
                   </dd>
                 </div>
                 <div>
-                  <dt>provider</dt>
-                  <dd>{asset.provider ?? asset.draft?.provider ?? 'unknown'}</dd>
+                  <dt>{t('common.provider')}</dt>
+                  <dd>{asset.provider ?? asset.draft?.provider ?? t('common.unknown')}</dd>
                 </div>
                 <div>
-                  <dt>model</dt>
+                  <dt>{t('common.model')}</dt>
                   <dd>{model}</dd>
                 </div>
                 <div>
-                  <dt>prompt</dt>
-                  <dd>{asset.prompt_version ?? asset.draft?.prompt_version ?? 'unknown'}</dd>
+                  <dt>{t('common.prompt')}</dt>
+                  <dd>{asset.prompt_version ?? asset.draft?.prompt_version ?? t('common.unknown')}</dd>
                 </div>
                 <div>
-                  <dt>mode</dt>
-                  <dd>{asset.processing_mode ?? asset.draft?.processing_mode ?? 'unknown'}</dd>
+                  <dt>{t('common.mode')}</dt>
+                  <dd>{asset.processing_mode ?? asset.draft?.processing_mode ?? t('common.unknown')}</dd>
                 </div>
                 <div>
-                  <dt>source</dt>
+                  <dt>{t('common.source')}</dt>
                   <dd>
                     <Tag tone={asset.is_mock ? 'accent' : 'muted'}>
-                      {asset.is_mock === true ? 'MOCK' : asset.is_mock === false ? 'REAL' : 'UNKNOWN'}
+                      {asset.is_mock === true ? t('common.mock') : asset.is_mock === false ? t('common.real') : t('common.unknownTag')}
                     </Tag>
                   </dd>
                 </div>
                 <div>
-                  <dt>version</dt>
+                  <dt>{t('common.version')}</dt>
                   <dd>v{asset.version}</dd>
                 </div>
                 <div>
-                  <dt>status</dt>
-                  <dd>{asset.status}</dd>
+                  <dt>{t('common.status')}</dt>
+                  <dd>{asset.status === 'published' ? t('common.published') : asset.status}</dd>
                 </div>
                 <div>
-                  <dt>published</dt>
+                  <dt>{t('common.published')}</dt>
                   <dd>{formatDate(asset.published_at)}</dd>
                 </div>
               </dl>
@@ -365,11 +363,11 @@ export function CardDetailView({
 
             <div className="side-panel">
               <div className="side-panel-head">
-                <MicroLabel>Dossiers</MicroLabel>
+                <MicroLabel>{t('card.dossiers')}</MicroLabel>
                 <span className="side-count">{String(linkedDossiers.length).padStart(2, '0')}</span>
               </div>
               {linkedDossiers.length === 0 ? (
-                <p className="side-muted">This card is not filed in a dossier.</p>
+                <p className="side-muted">{t('card.notFiled')}</p>
               ) : (
                 <div className="side-links">
                   {linkedDossiers.map((dossier) => (
@@ -389,17 +387,17 @@ export function CardDetailView({
                 </div>
               )}
               <button type="button" className="button ghost full small" onClick={openMove}>
-                <Icon name="folder" size={12} /> Manage dossier
+                <Icon name="folder" size={12} /> {t('card.manageDossier')}
               </button>
             </div>
 
             <div className="side-panel side-panel-actions">
-              <MicroLabel>Actions</MicroLabel>
+              <MicroLabel>{t('card.actions')}</MicroLabel>
               <button type="button" className="button ghost full" onClick={openEdit}>
-                <Icon name="edit" size={13} /> Edit metadata
+                <Icon name="edit" size={13} /> {t('card.editMetadata')}
               </button>
               <button type="button" className="button ghost full" onClick={toggleArchive}>
-                <Icon name="archive" size={13} /> {asset.archived ? 'Restore card' : 'Archive card'}
+                <Icon name="archive" size={13} /> {asset.archived ? t('card.restore') : t('card.archive')}
               </button>
             </div>
           </aside>
@@ -408,16 +406,16 @@ export function CardDetailView({
 
       {editOpen && (
         <Modal
-          title="Edit card metadata"
-          eyebrow="Asset / Metadata"
+          title={t('card.editTitle')}
+          eyebrow={t('card.editEyebrow')}
           onClose={() => setEditOpen(false)}
           footer={
             <>
               <button type="button" className="button ghost" onClick={() => setEditOpen(false)}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button type="submit" form="edit-card-form" className="button primary" disabled={saving}>
-                {saving ? 'Saving…' : 'Save changes'}
+                {saving ? t('common.saving') : t('common.saveChanges')}
               </button>
             </>
           }
@@ -425,29 +423,29 @@ export function CardDetailView({
           <form id="edit-card-form" className="modal-form" onSubmit={saveEdit}>
             <div className="field">
               <label className="field-label" htmlFor="edit-category">
-                Category
+                {t('common.category')}
               </label>
               <input
                 id="edit-category"
                 className="input"
                 value={category}
                 onChange={(event) => setCategory(event.target.value)}
-                placeholder="uncategorized"
+                placeholder={t('home.uncategorized')}
                 autoFocus
               />
             </div>
             <div className="field">
               <label className="field-label" htmlFor="edit-tags">
-                Tags
+                {t('card.tags')}
               </label>
               <input
                 id="edit-tags"
                 className="input"
                 value={tags}
                 onChange={(event) => setTags(event.target.value)}
-                placeholder="systems, note, research"
+                placeholder={t('card.categoryPlaceholder')}
               />
-              <span className="field-hint">Comma-separated. Empty values are discarded.</span>
+              <span className="field-hint">{t('card.categoryHint')}</span>
             </div>
             {modalError && <ErrorBanner message={modalError} />}
           </form>
@@ -456,13 +454,13 @@ export function CardDetailView({
 
       {moveOpen && (
         <Modal
-          title="Move card"
-          eyebrow="Asset / Dossier"
+          title={t('common.move')}
+          eyebrow={t('card.dossierEyebrow')}
           onClose={() => setMoveOpen(false)}
           footer={
             <>
               <button type="button" className="button ghost" onClick={() => setMoveOpen(false)}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
@@ -470,20 +468,17 @@ export function CardDetailView({
                 onClick={moveCard}
                 disabled={moving}
               >
-                {moving ? 'Moving…' : 'Apply move'}
+                {moving ? t('card.moving') : t('card.applyMove')}
               </button>
             </>
           }
         >
-          <p className="modal-copy">
-            Filing a card updates its dossier assignment. Existing dossier visualizations will
-            refresh when reopened.
-          </p>
+          <p className="modal-copy">{t('card.moveHint')}</p>
           {(dossiers ?? []).length === 0 ? (
             <EmptyState
               icon="folder"
-              title="No dossiers"
-              description="Create a dossier first, then return to file this card."
+              title={t('card.noDossiers')}
+              description={t('card.noDossiersBody')}
               compact
               action={
                 <button
@@ -494,12 +489,12 @@ export function CardDetailView({
                     openView('dossiers')
                   }}
                 >
-                  Open dossiers
+                  {t('card.openDossiers')}
                 </button>
               }
             />
           ) : (
-            <div className="option-list" role="radiogroup" aria-label="Destination dossier">
+            <div className="option-list" role="radiogroup" aria-label={t('card.destination')}>
               {(dossiers ?? []).map((dossier) => (
                 <label
                   key={dossier.id}
@@ -520,7 +515,7 @@ export function CardDetailView({
                   </span>
                   <span className="option-copy">
                     <strong>{dossier.name}</strong>
-                    <span>{dossier.description || `${dossier.card_count} cards`}</span>
+                    <span>{dossier.description || t('dossiers.cardsCount', { count: dossier.card_count })}</span>
                   </span>
                 </label>
               ))}
@@ -538,8 +533,8 @@ export function CardDetailView({
                   <Icon name="x" size={14} />
                 </span>
                 <span className="option-copy">
-                  <strong>Unfile card</strong>
-                  <span>Remove this card from all dossier assignments.</span>
+                  <strong>{t('card.unfile')}</strong>
+                  <span>{t('card.unfileHint')}</span>
                 </span>
               </label>
             </div>

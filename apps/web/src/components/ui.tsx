@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { cx } from '../utils'
 import { Icon, type IconName } from './Icon'
+import { useI18n } from '../i18n'
 
 export function MicroLabel({ children, className }: { children: ReactNode; className?: string }) {
   return <span className={cx('micro-label', className)}>{children}</span>
@@ -93,6 +94,7 @@ export function ErrorBanner({
   onRetry?: () => void
   onDismiss?: () => void
 }) {
+  const { t } = useI18n()
   return (
     <div className="error-banner" role="alert">
       <Icon name="alert" size={14} />
@@ -100,7 +102,7 @@ export function ErrorBanner({
       <div className="error-banner-actions">
         {onRetry && (
           <button type="button" className="text-button" onClick={onRetry}>
-            Retry
+            {t('common.retry')}
           </button>
         )}
         {onDismiss && (
@@ -108,7 +110,7 @@ export function ErrorBanner({
             type="button"
             className="icon-button"
             onClick={onDismiss}
-            aria-label="Dismiss error"
+            aria-label={t('component.dismissError')}
           >
             <Icon name="x" size={12} />
           </button>

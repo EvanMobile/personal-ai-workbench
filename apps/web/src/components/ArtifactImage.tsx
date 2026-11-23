@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Asset } from '../types'
 import { cx } from '../utils'
 import { Icon } from './Icon'
+import { useI18n } from '../i18n'
 
 interface ArtifactImageProps {
   asset: Asset | null | undefined
@@ -11,6 +12,7 @@ interface ArtifactImageProps {
 }
 
 export function ArtifactImage({ asset, alt, className, compact = false }: ArtifactImageProps) {
+  const { t } = useI18n()
   const url = asset?.artifact?.url ?? null
   const [failed, setFailed] = useState(false)
 
@@ -22,8 +24,8 @@ export function ArtifactImage({ asset, alt, className, compact = false }: Artifa
     return (
       <div className={cx('artifact-placeholder', compact && 'artifact-placeholder-compact', className)}>
         <Icon name={asset?.artifact ? 'alert' : 'image'} size={compact ? 16 : 24} />
-        <span>{asset?.artifact ? 'Artifact unavailable' : 'No artifact'}</span>
-        {asset?.artifact && <code>{asset.artifact.status}</code>}
+        <span>{asset?.artifact ? t('component.artifactUnavailable') : t('component.noArtifact')}</span>
+        {asset?.artifact && <code>{asset.artifact.status === 'ready' ? t('common.ready') : asset.artifact.status === 'failed' ? t('status.failed') : asset.artifact.status}</code>}
       </div>
     )
   }
@@ -32,7 +34,7 @@ export function ArtifactImage({ asset, alt, className, compact = false }: Artifa
     <img
       className={cx('artifact-image', className)}
       src={url}
-      alt={alt ?? `Artifact for ${asset?.title ?? 'card'}`}
+      alt={alt ?? t('component.artifactAlt', { title: asset?.title ?? t('tabs.card') })}
       loading="lazy"
       onError={() => setFailed(true)}
     />

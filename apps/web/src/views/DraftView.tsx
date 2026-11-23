@@ -14,6 +14,7 @@ import {
 import { useAsyncData } from '../hooks/useAsyncData'
 import type { Draft, OpenView, PublishResponse } from '../types'
 import { formatDate, shortId } from '../utils'
+import { useI18n } from '../i18n'
 
 export function DraftView({
   draftId,
@@ -23,6 +24,7 @@ export function DraftView({
   openView: OpenView
 }) {
   const { notify } = useToast()
+  const { t } = useI18n()
   const { data: draft, loading, error, reload, setData } = useAsyncData<Draft>(
     (signal) => api.draft(draftId, signal),
     [draftId],
@@ -43,7 +45,7 @@ export function DraftView({
       const response = await api.reviseDraft(draft.id, instruction.trim())
       setData(response.draft)
       setInstruction('')
-      notify(`Draft revised to v${response.draft.version}.`, 'success')
+      notify(t('draft.toastRevised', { version: response.draft.version }), 'success')
     } catch (caught) {
       setRevisionError(errorMessage(caught))
     } finally {
@@ -59,7 +61,7 @@ export function DraftView({
       const response = await api.publishDraft(draft.id, note.trim() || undefined)
       setPublished(response)
       setData({ ...draft, status: 'published' })
-      notify('Draft published. Card asset created.', 'success')
+      notify(t('draft.toastPublished'), 'success')
     } catch (caught) {
       setPublishError(errorMessage(caught))
     } finally {
@@ -86,9 +88,9 @@ export function DraftView({
       <div className="view-scroll">
         <div className="view-inner">
           <ViewHeader
-            eyebrow="Ingestion / Draft"
-            title="Draft unavailable"
-            back={{ label: 'Capture', onClick: () => openView('capture') }}
+            eyebrow={t('draft.eyebrow')}
+            title={t('draft.unavailable')}
+            back={{ label: t('draft.capture'), onClick: () => openView('capture') }}
           />
           <ErrorBanner message={error} onRetry={reload} />
         </div>
@@ -102,15 +104,15 @@ export function DraftView({
     <div className="view-scroll">
       <div className="view-inner">
         <ViewHeader
-          eyebrow="Ingestion / Draft"
+          eyebrow={t('draft.eyebrow')}
           title={draft.title}
-          description={draft.summary || 'Generated draft awaiting publication.'}
-          back={{ label: 'Capture', onClick: () => openView('capture') }}
+          description={draft.summary || t('draft.awaiting')}
+          back={{ label: t('draft.capture'), onClick: () => openView('capture') }}
           actions={
             <>
-              <Tag tone={draft.status === 'published' ? 'success' : 'accent'}>{draft.status}</Tag>
+              <Tag tone={draft.status === 'published' ? 'success' : 'accent'}>{draft.status === 'published' ? t('common.published') : t('common.draft')}</Tag>
               <button type="button" className="button ghost" onClick={reload}>
-                <Icon name="refresh" size={13} /> Reload
+                <Icon name="refresh" size={13} /> {t('draft.reload')}
               </button>
             </>
           }
@@ -120,56 +122,50 @@ export function DraftView({
 
         {draft.is_mock === true && (
           <div className="provenance-banner provenance-mock">
-            <strong>MOCK · 规则模拟 · 未调用真实 LLM</strong>
-            <span>
-              provider {draft.provider} · model {draft.model} · prompt {draft.prompt_version} · mode {draft.processing_mode}
-            </span>
+            <strong>{t('draft.mockTitle')}</strong>
+            <span>{t('common.provider')} {draft.provider} · {t('common.model')} {draft.model} · {t('common.prompt')} {draft.prompt_version} · {t('common.mode')} {draft.processing_mode}</span>
           </div>
         )}
         {draft.is_mock === null && (
           <div className="provenance-banner provenance-unknown">
-            <strong>UNKNOWN · 历史来源未知</strong>
-            <span>
-              provider {draft.provider} · model {draft.model} · prompt {draft.prompt_version} · 不能视为真实 LLM 分析
-            </span>
+            <strong>{t('draft.unknownTitle')}</strong>
+            <span>{t('common.provider')} {draft.provider} · {t('common.model')} {draft.model} · {t('common.prompt')} {draft.prompt_version} · {t('draft.unknownBody')}</span>
           </div>
         )}
         {draft.is_mock === false && (
           <div className="provenance-banner provenance-real">
-            <strong>REAL PROVIDER · {draft.provider}</strong>
-            <span>
-              model {draft.model} · prompt {draft.prompt_version} · mode {draft.processing_mode}
-            </span>
+            <strong>{t('card.realProvider')} · {draft.provider}</strong>
+            <span>{t('common.model')} {draft.model} · {t('common.prompt')} {draft.prompt_version} · {t('common.mode')} {draft.processing_mode}</span>
           </div>
         )}
 
         <div className="meta-strip">
           <div>
-            <span>provider</span>
-            <strong>{draft.provider || 'unknown'}</strong>
+            <span>{t('common.provider')}</span>
+            <strong>{draft.provider || t('common.unknown')}</strong>
           </div>
           <div>
-            <span>mode</span>
-            <strong>{draft.processing_mode || 'unknown'}</strong>
+            <span>{t('common.mode')}</span>
+            <strong>{draft.processing_mode || t('common.unknown')}</strong>
           </div>
           <div>
-            <span>model</span>
+            <span>{t('common.model')}</span>
             <strong>{draft.model}</strong>
           </div>
           <div>
-            <span>prompt</span>
+            <span>{t('common.prompt')}</span>
             <strong>{draft.prompt_version}</strong>
           </div>
           <div>
-            <span>version</span>
+            <span>{t('common.version')}</span>
             <strong>v{draft.version}</strong>
           </div>
           <div>
-            <span>category</span>
+            <span>{t('common.category')}</span>
             <strong>{draft.category || '—'}</strong>
           </div>
           <div>
-            <span>updated</span>
+            <span>{t('common.updated')}</span>
             <strong>{formatDate(draft.updated_at)}</strong>
           </div>
         </div>
@@ -182,10 +178,10 @@ export function DraftView({
             <div className="publish-success-copy">
               <div className="publish-success-title">
                 <Icon name="check" size={14} />
-                <strong>Published as card</strong>
+                <strong>{t('draft.publishedAsCard')}</strong>
               </div>
               <p>
-                {published.asset.title} · {published.artifact ? 'artifact generated' : 'no artifact attached'}
+                {published.asset.title} · {published.artifact ? t('draft.artifactGenerated') : t('draft.noArtifact')}
               </p>
               <button
                 type="button"
@@ -194,7 +190,7 @@ export function DraftView({
                   openView('card', { id: published.asset.id }, published.asset.title)
                 }
               >
-                Open card <Icon name="arrow-up-right" size={11} />
+                {t('draft.openCard')} <Icon name="arrow-up-right" size={11} />
               </button>
             </div>
           </div>
@@ -204,23 +200,23 @@ export function DraftView({
           <div className="draft-main">
             <section className="detail-section">
               <div className="section-head">
-                <MicroLabel>Summary</MicroLabel>
+                <MicroLabel>{t('draft.summary')}</MicroLabel>
                 <span className="section-index">01</span>
               </div>
-              <p className="detail-lead">{draft.summary || 'No summary generated.'}</p>
+              <p className="detail-lead">{draft.summary || t('draft.noSummary')}</p>
             </section>
 
             <section className="detail-section">
               <div className="section-head">
-                <MicroLabel>Conclusion</MicroLabel>
+                <MicroLabel>{t('draft.conclusion')}</MicroLabel>
                 <span className="section-index">02</span>
               </div>
-              <p>{draft.conclusion || 'No conclusion generated.'}</p>
+              <p>{draft.conclusion || t('draft.noConclusion')}</p>
             </section>
 
             <section className="detail-section">
               <div className="section-head">
-                <MicroLabel>Body</MicroLabel>
+                <MicroLabel>{t('draft.body')}</MicroLabel>
                 <span className="section-index">03</span>
               </div>
               <div className="prose-shell">
@@ -240,18 +236,16 @@ export function DraftView({
           <aside className="draft-side">
             <div className="side-panel">
               <div className="side-panel-head">
-                <MicroLabel>Revision</MicroLabel>
+                <MicroLabel>{t('draft.revision')}</MicroLabel>
                 <Icon name="sparkles" size={13} />
               </div>
-              <p className="side-muted">
-                Guide the model with a revision instruction. This creates a new draft version.
-              </p>
+              <p className="side-muted">{t('draft.revisionHint')}</p>
               <textarea
                 className="textarea"
                 value={instruction}
                 onChange={(event) => setInstruction(event.target.value)}
                 rows={4}
-                placeholder="e.g. Tighten the conclusion and preserve the two main examples."
+                placeholder={t('draft.revisionPlaceholder')}
               />
               {revisionError && <ErrorBanner message={revisionError} />}
               <button
@@ -260,22 +254,20 @@ export function DraftView({
                 disabled={revising || !instruction.trim()}
                 onClick={revise}
               >
-                {revising ? 'Revising…' : 'Apply revision'}
+                {revising ? t('common.revising') : t('draft.applyRevision')}
               </button>
             </div>
 
             <div className="side-panel">
               <div className="side-panel-head">
-                <MicroLabel>Publish</MicroLabel>
+                <MicroLabel>{t('draft.publish')}</MicroLabel>
               </div>
-              <p className="side-muted">
-                Publishing creates a knowledge card and queues an artifact render.
-              </p>
+              <p className="side-muted">{t('draft.publishHint')}</p>
               <input
                 className="input"
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
-                placeholder="Optional publish note"
+                placeholder={t('draft.publishNote')}
               />
               {publishError && <ErrorBanner message={publishError} />}
               <button
@@ -285,23 +277,23 @@ export function DraftView({
                 disabled={publishing || draft.status === 'published' || Boolean(published)}
               >
                 <Icon name="arrow-up-right" size={13} />
-                {publishing ? 'Publishing…' : 'Publish draft'}
+                {publishing ? t('common.publishing') : t('draft.publishDraft')}
               </button>
             </div>
 
             <div className="side-panel">
-              <MicroLabel>Record</MicroLabel>
+              <MicroLabel>{t('common.record')}</MicroLabel>
               <dl className="meta-list">
                 <div>
-                  <dt>draft</dt>
+                  <dt>{t('common.draft')}</dt>
                   <dd title={draft.id}>{shortId(draft.id, 14)}</dd>
                 </div>
                 <div>
-                  <dt>raw content</dt>
+                  <dt>{t('common.rawContent')}</dt>
                   <dd title={draft.raw_content_id}>{shortId(draft.raw_content_id, 14)}</dd>
                 </div>
                 <div>
-                  <dt>created</dt>
+                  <dt>{t('common.created')}</dt>
                   <dd>{formatDate(draft.created_at)}</dd>
                 </div>
               </dl>

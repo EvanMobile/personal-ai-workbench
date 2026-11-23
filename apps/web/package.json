@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --port 5173",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:i18n": "node --experimental-strip-types --test scripts/check-i18n.mjs"
   },
   "dependencies": {
     "react": "^19.1.1",

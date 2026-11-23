@@ -18,6 +18,7 @@ import type {
   PublishResponse,
   RawContent,
 } from './types'
+import { translate } from './i18n'
 
 const API_ROOT = '/api/v1'
 
@@ -35,7 +36,7 @@ export class ApiError extends Error {
 
 /** Network-level failures (as opposed to an HTTP error response). */
 export class ApiOfflineError extends Error {
-  constructor(message = 'API offline — cannot reach the workbench service.') {
+  constructor(message = translate('error.apiOffline')) {
     super(message)
     this.name = 'ApiOfflineError'
   }
@@ -107,7 +108,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
         parsed = undefined
       }
     }
-    const message = extractMessage(parsed, `Request failed (${response.status})`)
+    const message = extractMessage(parsed, translate('error.requestFailed', { status: response.status }))
     throw new ApiError(message, response.status, parsed)
   }
 
@@ -260,10 +261,10 @@ export const api = {
 }
 
 export function errorMessage(error: unknown): string {
-  if (error instanceof ApiOfflineError) return error.message
+  if (error instanceof ApiOfflineError) return translate('error.apiOffline')
   if (error instanceof ApiError) return error.message
   if (error instanceof Error) return error.message
-  return 'Something went wrong.'
+  return translate('error.unknown')
 }
 
 export function isOfflineError(error: unknown): boolean {

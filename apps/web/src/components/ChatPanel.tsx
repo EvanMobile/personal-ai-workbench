@@ -12,6 +12,7 @@ import { Icon } from './Icon'
 import { Markdown } from './Markdown'
 import { useToast } from './Toast'
 import { ErrorBanner, MicroLabel, Skeleton, Tag } from './ui'
+import { useI18n } from '../i18n'
 
 interface SuggestionTarget {
   kind: ViewKind
@@ -58,6 +59,39 @@ function resolveSuggestionTarget(suggestion: ChatSuggestion): SuggestionTarget |
   return null
 }
 
+function localizedSuggestion(
+  suggestion: ChatSuggestion,
+  t: ReturnType<typeof useI18n>['t'],
+): { title: string; description?: string } {
+  const haystack = `${suggestion.kind} ${suggestion.action?.type ?? ''}`.toLowerCase()
+  const count = Number(suggestion.title.match(/\d+/)?.[0] ?? 0)
+  if (haystack.includes('draft')) {
+    return {
+      title:
+        count > 0
+          ? t(count === 1 ? 'chat.reviewDraftOne' : 'chat.reviewDraftCount', { count })
+          : t('chat.reviewDraft'),
+      description: t('chat.reviewDraftBody'),
+    }
+  }
+  if (haystack.includes('page')) {
+    return { title: t('chat.reviewPage'), description: t('chat.reviewPageBody') }
+  }
+  if (haystack.includes('dossier')) {
+    return { title: t('chat.reviewDossier'), description: t('chat.reviewDossierBody') }
+  }
+  if (haystack.includes('card') || haystack.includes('asset')) {
+    return {
+      title:
+        count > 0
+          ? t(count === 1 ? 'chat.reviewCardsOne' : 'chat.reviewCardsCount', { count })
+          : t('chat.reviewCards'),
+      description: t('chat.reviewCardsBody'),
+    }
+  }
+  return { title: suggestion.title, description: suggestion.description }
+}
+
 export function ChatPanel({
   onCollapse,
   openView,
@@ -66,6 +100,7 @@ export function ChatPanel({
   openView: OpenView
 }) {
   const { notify } = useToast()
+  const { t } = useI18n()
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [activeId, setActiveId] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -174,7 +209,7 @@ export function ChatPanel({
       setConversations((previous) => [conversation, ...previous.filter((item) => item.id !== conversation.id)])
       setActiveId(conversation.id)
       setThreadError(null)
-      notify('Conversation started.', 'success')
+      notify(t('chat.toastStarted'), 'success')
     } catch (caught) {
       notify(errorMessage(caught), 'danger')
     } finally {
@@ -220,15 +255,15 @@ export function ChatPanel({
   const activeConversation = conversations.find((item) => item.id === activeId) ?? null
 
   return (
-    <aside className="chat-panel" aria-label="AI chat">
+    <aside className="chat-panel" aria-label={t('chat.title')}>
       <header className="chat-head">
         <div className="chat-head-title">
           <span className="chat-avatar">
             <Icon name="sparkles" size={13} />
           </span>
           <div>
-            <MicroLabel>AI Chat</MicroLabel>
-            <span className="chat-head-sub">context assistant</span>
+            <MicroLabel>{t('chat.title')}</MicroLabel>
+            <span className="chat-head-sub">{t('chat.subtitle')}</span>
           </div>
         </div>
         <div className="chat-head-actions">
@@ -237,8 +272,8 @@ export function ChatPanel({
             className="icon-button"
             onClick={startConversation}
             disabled={creating}
-            title="New conversation"
-            aria-label="New conversation"
+            title={t('chat.newConversation')}
+            aria-label={t('chat.newConversation')}
           >
             <Icon name="plus" size={13} />
           </button>
@@ -247,8 +282,8 @@ export function ChatPanel({
               type="button"
               className="icon-button"
               onClick={onCollapse}
-              title="Collapse chat panel"
-              aria-label="Collapse chat panel"
+              title={t('chat.collapse')}
+              aria-label={t('chat.collapse')}
             >
               <Icon name="panel-right" size={13} />
             </button>
@@ -257,18 +292,18 @@ export function ChatPanel({
       </header>
 
       <div className="chat-conversation-bar">
-        <span className="select-label">THREAD</span>
+        <span className="select-label">{t('chat.thread')}</span>
         <select
           className="select chat-select"
           value={activeId}
           onChange={(event) => setActiveId(event.target.value)}
           disabled={conversations.length === 0}
-          aria-label="Select conversation"
+          aria-label={t('chat.selectConversation')}
         >
-          {conversations.length === 0 && <option value="">No conversations</option>}
+          {conversations.length === 0 && <option value="">{t('chat.noConversations')}</option>}
           {conversations.map((conversation) => (
             <option key={conversation.id} value={conversation.id}>
-              {conversation.title || `Conversation ${shortId(conversation.id, 4)}`}
+              {conversation.title || t('chat.conversation', { id: shortId(conversation.id, 4) })}
             </option>
           ))}
         </select>
@@ -296,18 +331,15 @@ export function ChatPanel({
             <span className="chat-empty-icon">
               <Icon name="chat" size={24} />
             </span>
-            <h3>No conversation</h3>
-            <p>
-              Start a thread with the context assistant. Suggestions are advisory and require
-              confirmation.
-            </p>
+            <h3>{t('chat.noConversation')}</h3>
+            <p>{t('chat.emptyBody')}</p>
             <button
               type="button"
               className="button small primary"
               onClick={startConversation}
               disabled={creating}
             >
-              <Icon name="plus" size={12} /> {creating ? 'Starting…' : 'New conversation'}
+              <Icon name="plus" size={12} /> {creating ? t('chat.starting') : t('chat.newConversation')}
             </button>
           </div>
         )}
@@ -329,7 +361,7 @@ export function ChatPanel({
           messages.length === 0 && (
             <div className="chat-thread-empty">
               <Icon name="terminal" size={16} />
-              <p>Thread ready. Ask about your cards, dossiers, or pages.</p>
+              <p>{t('chat.threadReady')}</p>
             </div>
           )}
 
@@ -341,7 +373,7 @@ export function ChatPanel({
             >
               <div className="chat-message-meta">
                 <span className="chat-role">
-                  {message.role === 'user' ? 'YOU' : message.role === 'assistant' ? 'AI' : message.role.toUpperCase()}
+                  {message.role === 'user' ? t('chat.you') : message.role === 'assistant' ? t('chat.ai') : message.role.toUpperCase()}
                 </span>
                 <span>{relativeTime(message.created_at)}</span>
               </div>
@@ -360,15 +392,15 @@ export function ChatPanel({
         {suggestionsError && (
           <div className="suggestion-error">
             <Icon name="alert" size={11} />
-            <span>Suggestions unavailable</span>
+            <span>{t('chat.suggestionsUnavailable')}</span>
           </div>
         )}
 
         {suggestions.length > 0 && (
           <div className="suggestion-block">
             <div className="suggestion-label">
-              <MicroLabel>Suggested</MicroLabel>
-              <span>requires confirmation</span>
+              <MicroLabel>{t('chat.suggested')}</MicroLabel>
+              <span>{t('chat.requiresConfirmation')}</span>
             </div>
             <div className="suggestion-chips">
               {suggestions.slice(0, 5).map((suggestion) => (
@@ -379,7 +411,7 @@ export function ChatPanel({
                     'suggestion-chip',
                     pendingSuggestion?.id === suggestion.id && 'suggestion-chip-active',
                   )}
-                  title={suggestion.description || suggestion.title}
+                  title={localizedSuggestion(suggestion, t).description || localizedSuggestion(suggestion, t).title}
                   onClick={() =>
                     setPendingSuggestion((current) =>
                       current?.id === suggestion.id ? null : suggestion,
@@ -387,7 +419,7 @@ export function ChatPanel({
                   }
                 >
                   <Icon name="sparkles" size={10} />
-                  <span>{suggestion.title}</span>
+                  <span>{localizedSuggestion(suggestion, t).title}</span>
                 </button>
               ))}
             </div>
@@ -417,7 +449,7 @@ export function ChatPanel({
               }
             }}
             placeholder={
-              activeId ? 'Ask the assistant…' : 'Start a conversation to ask…'
+              activeId ? t('chat.placeholder') : t('chat.placeholderNoConversation')
             }
             rows={2}
             disabled={!activeId || sending}
@@ -426,15 +458,15 @@ export function ChatPanel({
             type="submit"
             className="chat-send"
             disabled={!activeId || sending || !input.trim()}
-            aria-label="Send message"
+            aria-label={t('chat.send')}
           >
             <Icon name={sending ? 'refresh' : 'send'} size={15} />
           </button>
         </form>
         <div className="chat-compose-foot">
-          <span>ENTER to send · SHIFT+ENTER newline</span>
+          <span>{t('chat.enterHint')}</span>
           <span className="chat-advisory">
-            <Icon name="alert" size={9} /> advisory only
+            <Icon name="alert" size={9} /> {t('chat.advisoryOnly')}
           </span>
         </div>
       </div>
@@ -451,54 +483,54 @@ function SuggestionConfirmation({
   onCancel: () => void
   onReview: (target: SuggestionTarget) => void
 }) {
+  const { t } = useI18n()
   const target = resolveSuggestionTarget(suggestion)
+  const display = localizedSuggestion(suggestion, t)
   const payloadPreview =
     suggestion.action?.payload && Object.keys(suggestion.action.payload).length > 0
       ? JSON.stringify(suggestion.action.payload)
       : null
 
   return (
-    <div className="suggestion-confirm" role="alertdialog" aria-label="Suggestion confirmation">
+    <div className="suggestion-confirm" role="alertdialog" aria-label={t('chat.suggestionConfirmation')}>
       <div className="suggestion-confirm-head">
         <span>
           <Icon name="alert" size={11} />
-          Suggested action · confirmation required
+          {t('chat.suggestedAction')}
         </span>
         <button
           type="button"
           className="icon-button"
           onClick={onCancel}
-          aria-label="Dismiss suggestion"
+          aria-label={t('chat.dismissSuggestion')}
         >
           <Icon name="x" size={11} />
         </button>
       </div>
-      <strong>{suggestion.title}</strong>
-      {suggestion.description && <p>{suggestion.description}</p>}
+      <strong>{display.title}</strong>
+      {display.description && <p>{display.description}</p>}
       <div className="suggestion-action-line">
         <Tag>{suggestion.kind}</Tag>
         <code>{suggestion.action?.type || 'unknown'}</code>
-        {target && <span>review only</span>}
+        {target && <span>{t('chat.reviewOnly')}</span>}
       </div>
       {payloadPreview && <code className="suggestion-payload">{payloadPreview}</code>}
-      <p className="suggestion-disclaimer">
-        Nothing is applied automatically. Suggested mutations are not executed from this panel.
-      </p>
+      <p className="suggestion-disclaimer">{t('chat.disclaimer')}</p>
       <div className="suggestion-confirm-actions">
         <button type="button" className="button ghost small" onClick={onCancel}>
-          Cancel
+          {t('common.cancel')}
         </button>
         {target ? (
           <button
             type="button"
             className="button small primary"
-            onClick={() => onReview(target)}
+            onClick={() => onReview({ ...target, title: display.title })}
           >
-            Review context <Icon name="arrow-up-right" size={11} />
+            {t('chat.reviewContext')} <Icon name="arrow-up-right" size={11} />
           </button>
         ) : (
           <button type="button" className="button small" onClick={onCancel}>
-            Acknowledge
+            {t('chat.acknowledge')}
           </button>
         )}
       </div>

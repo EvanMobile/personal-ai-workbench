@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from './Icon'
+import { useI18n } from '../i18n'
 
 interface ModalProps {
   title: string
@@ -12,6 +13,7 @@ interface ModalProps {
 }
 
 export function Modal({ title, eyebrow, onClose, children, footer, width = 'md' }: ModalProps) {
+  const { t } = useI18n()
   const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export function Modal({ title, eyebrow, onClose, children, footer, width = 'md' 
             {eyebrow && <div className="micro-label">{eyebrow}</div>}
             <h2>{title}</h2>
           </div>
-          <button type="button" className="icon-button" onClick={onClose} aria-label="Close dialog">
+          <button type="button" className="icon-button" onClick={onClose} aria-label={t('component.closeDialog')}>
             <Icon name="x" size={14} />
           </button>
         </header>

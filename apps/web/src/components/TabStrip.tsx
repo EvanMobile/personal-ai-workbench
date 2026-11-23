@@ -1,6 +1,7 @@
 import type { ViewKind, WorkspaceTab } from '../types'
 import { cx } from '../utils'
 import { Icon, type IconName } from './Icon'
+import { useI18n } from '../i18n'
 
 const kindIcon: Record<ViewKind, IconName> = {
   home: 'grid',
@@ -25,9 +26,10 @@ interface TabStripProps {
 }
 
 export function TabStrip({ tabs, activeId, onSelect, onClose, onNewCapture }: TabStripProps) {
+  const { t } = useI18n()
   return (
     <div className="tab-strip-wrap">
-      <div className="tab-strip" role="tablist" aria-label="Open workspace tabs">
+      <div className="tab-strip" role="tablist" aria-label={t('tabs.openTabs')}>
         {tabs.map((tab) => {
           const active = tab.id === activeId
           return (
@@ -51,7 +53,7 @@ export function TabStrip({ tabs, activeId, onSelect, onClose, onNewCapture }: Ta
                 <button
                   type="button"
                   className="editor-tab-close"
-                  aria-label={`Close ${tab.title}`}
+                  aria-label={t('tabs.close', { title: tab.title })}
                   onClick={(event) => {
                     event.stopPropagation()
                     onClose(tab.id)
@@ -68,8 +70,8 @@ export function TabStrip({ tabs, activeId, onSelect, onClose, onNewCapture }: Ta
         type="button"
         className="tab-add"
         onClick={onNewCapture}
-        title="New capture"
-        aria-label="New capture"
+        title={t('tabs.newCapture')}
+        aria-label={t('tabs.newCapture')}
       >
         <Icon name="plus" size={13} />
       </button>

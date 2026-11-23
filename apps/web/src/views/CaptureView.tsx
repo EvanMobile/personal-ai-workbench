@@ -11,9 +11,11 @@ import {
 } from '../components/ui'
 import type { CaptureResponse, Draft, OpenView } from '../types'
 import { cx, formatDateTime, shortId } from '../utils'
+import { useI18n } from '../i18n'
 
 export function CaptureView({ openView }: { openView: OpenView }) {
   const { notify } = useToast()
+  const { t } = useI18n()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [mode, setMode] = useState<'text' | 'file'>('text')
   const [content, setContent] = useState('')
@@ -70,7 +72,7 @@ export function CaptureView({ openView }: { openView: OpenView }) {
       setContent('')
       setFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
-      notify('Capture stored. Raw content is ready for digest.', 'success')
+      notify(t('capture.toastStored'), 'success')
     } catch (caught) {
       const message = errorMessage(caught)
       setError(message)
@@ -87,7 +89,7 @@ export function CaptureView({ openView }: { openView: OpenView }) {
     try {
       const response = await api.digest(result.raw_content_id)
       setDraft(response.draft)
-      notify('Digest complete. A draft is ready for review.', 'success')
+      notify(t('capture.toastDigest'), 'success')
     } catch (caught) {
       const message = errorMessage(caught)
       setDigestError(message)
@@ -101,14 +103,14 @@ export function CaptureView({ openView }: { openView: OpenView }) {
     <div className="view-scroll">
       <div className="view-inner view-inner-narrow">
         <ViewHeader
-          eyebrow="Ingestion / Capture"
-          title="Capture context"
-          description="Send raw text or a file into the pipeline. Nothing is generated until you run a digest."
+          eyebrow={t('capture.eyebrow')}
+          title={t('capture.title')}
+          description={t('capture.description')}
         />
 
         <div className="capture-layout">
           <form className="capture-form" onSubmit={handleSubmit}>
-            <div className="segmented" role="tablist" aria-label="Capture input type">
+            <div className="segmented" role="tablist" aria-label={t('capture.inputType')}>
               <button
                 type="button"
                 role="tab"
@@ -119,7 +121,7 @@ export function CaptureView({ openView }: { openView: OpenView }) {
                   resetResult()
                 }}
               >
-                <Icon name="file" size={12} /> Text
+                <Icon name="file" size={12} /> {t('capture.text')}
               </button>
               <button
                 type="button"
@@ -131,7 +133,7 @@ export function CaptureView({ openView }: { openView: OpenView }) {
                   resetResult()
                 }}
               >
-                <Icon name="upload" size={12} /> File
+                <Icon name="upload" size={12} /> {t('capture.file')}
               </button>
             </div>
 
@@ -139,16 +141,14 @@ export function CaptureView({ openView }: { openView: OpenView }) {
               <div className="field">
                 <div className="field-label-row">
                   <label htmlFor="capture-content" className="field-label">
-                    Raw content
+                    {t('capture.rawContent')}
                   </label>
-                  <span className="field-counter">{content.length.toLocaleString()} chars</span>
+                  <span className="field-counter">{content.length.toLocaleString()} {t('common.chars')}</span>
                 </div>
                 <textarea
                   id="capture-content"
                   className="textarea capture-textarea"
-                  placeholder={
-                    'Paste notes, a passage, a decision, or anything worth retaining…\n\nMarkdown is preserved through the pipeline.'
-                  }
+                  placeholder={t('capture.contentPlaceholder')}
                   value={content}
                   rows={14}
                   onChange={(event) => {
@@ -161,11 +161,11 @@ export function CaptureView({ openView }: { openView: OpenView }) {
                     }
                   }}
                 />
-                <span className="field-hint">⌘↵ to capture · plain text or Markdown</span>
+                <span className="field-hint">{t('capture.contentHint')}</span>
               </div>
             ) : (
               <div className="field">
-                <span className="field-label">Source file</span>
+                <span className="field-label">{t('capture.sourceFile')}</span>
                 <div
                   className={cx('drop-zone', dragging && 'drop-zone-active', file && 'drop-zone-filled')}
                   onDragOver={(event) => {
@@ -198,7 +198,7 @@ export function CaptureView({ openView }: { openView: OpenView }) {
                       </span>
                       <strong>{file.name}</strong>
                       <span className="drop-meta">
-                        {(file.size / 1024).toFixed(1)} KB · {file.type || 'unknown type'}
+                        {(file.size / 1024).toFixed(1)} KB · {file.type || t('capture.unknownType')}
                       </span>
                       <button
                         type="button"
@@ -210,7 +210,7 @@ export function CaptureView({ openView }: { openView: OpenView }) {
                           if (fileInputRef.current) fileInputRef.current.value = ''
                         }}
                       >
-                        Clear file
+                        {t('capture.clearFile')}
                       </button>
                     </>
                   ) : (
@@ -218,8 +218,8 @@ export function CaptureView({ openView }: { openView: OpenView }) {
                       <span className="drop-icon">
                         <Icon name="upload" size={22} />
                       </span>
-                      <strong>Drop a file here or browse</strong>
-                      <span className="drop-meta">TXT, MD, PDF · one file at a time</span>
+                      <strong>{t('capture.dropFile')}</strong>
+                      <span className="drop-meta">{t('capture.fileHint')}</span>
                     </>
                   )}
                 </div>
@@ -228,7 +228,7 @@ export function CaptureView({ openView }: { openView: OpenView }) {
 
             <div className="field">
               <label className="field-label" htmlFor="capture-intent">
-                Intent
+                {t('capture.intent')}
               </label>
               <input
                 id="capture-intent"
@@ -242,9 +242,7 @@ export function CaptureView({ openView }: { openView: OpenView }) {
                 autoComplete="off"
                 spellCheck={false}
               />
-              <span className="field-hint">
-                Routed to the backend ingestion service. Default: knowledge_capture
-              </span>
+              <span className="field-hint">{t('capture.intentHint')}</span>
             </div>
 
             {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
@@ -252,38 +250,38 @@ export function CaptureView({ openView }: { openView: OpenView }) {
             <div className="form-actions">
               <span className="form-status">
                 <span className="status-dot" />
-                Ready to ingest
+                {t('capture.ready')}
               </span>
               <button type="submit" className="button primary" disabled={!canSubmit}>
                 {submitting ? <Spinner /> : <Icon name="bolt" size={13} />}
-                {submitting ? 'Capturing…' : 'Capture'}
+                {submitting ? t('capture.capturing') : t('capture.capture')}
               </button>
             </div>
           </form>
 
           <aside className="capture-aside">
             <div className="aside-panel">
-              <MicroLabel>Pipeline</MicroLabel>
+              <MicroLabel>{t('capture.pipeline')}</MicroLabel>
               <ol className="pipeline-list">
                 <li className="pipeline-list-item active">
                   <span className="pipeline-index">01</span>
                   <div>
-                    <strong>Capture</strong>
-                    <span>Raw content is stored with source metadata.</span>
+                    <strong>{t('capture.capture')}</strong>
+                    <span>{t('capture.rawStored')}</span>
                   </div>
                 </li>
                 <li className={cx('pipeline-list-item', result && 'active')}>
                   <span className="pipeline-index">02</span>
                   <div>
-                    <strong>Digest</strong>
-                    <span>Generate a structured draft from the raw input.</span>
+                    <strong>{t('capture.digest')}</strong>
+                    <span>{t('capture.digestHint')}</span>
                   </div>
                 </li>
                 <li className={cx('pipeline-list-item', draft && 'active')}>
                   <span className="pipeline-index">03</span>
                   <div>
-                    <strong>Publish</strong>
-                    <span>Turn the draft into a card and artifact.</span>
+                    <strong>{t('capture.publish')}</strong>
+                    <span>{t('capture.publishHint')}</span>
                   </div>
                 </li>
               </ol>
@@ -292,28 +290,28 @@ export function CaptureView({ openView }: { openView: OpenView }) {
             {result && (
               <div className="aside-panel receipt-panel">
                 <div className="receipt-head">
-                  <MicroLabel>Capture receipt</MicroLabel>
-                  <Tag tone="success">stored</Tag>
+                  <MicroLabel>{t('capture.receipt')}</MicroLabel>
+                  <Tag tone="success">{t('common.stored')}</Tag>
                 </div>
                 <dl className="meta-list">
                   <div>
-                    <dt>capture</dt>
+                    <dt>{t('capture.receiptCapture')}</dt>
                     <dd title={result.capture_id}>{shortId(result.capture_id, 12)}</dd>
                   </div>
                   <div>
-                    <dt>raw content</dt>
+                    <dt>{t('capture.receiptRaw')}</dt>
                     <dd title={result.raw_content_id}>{shortId(result.raw_content_id, 12)}</dd>
                   </div>
                   <div>
-                    <dt>status</dt>
-                    <dd>{result.status}</dd>
+                    <dt>{t('capture.receiptStatus')}</dt>
+                    <dd>{result.status === 'stored' ? t('common.stored') : result.status}</dd>
                   </div>
                   <div>
-                    <dt>source</dt>
+                    <dt>{t('capture.receiptSource')}</dt>
                     <dd>{result.source_type}</dd>
                   </div>
                 </dl>
-                <p className="receipt-message">{result.message}</p>
+                <p className="receipt-message">{t('capture.rawStored')}</p>
 
                 {!draft && (
                   <button
@@ -323,7 +321,7 @@ export function CaptureView({ openView }: { openView: OpenView }) {
                     disabled={digesting}
                   >
                     {digesting ? <Spinner /> : <Icon name="sparkles" size={13} />}
-                    {digesting ? 'Digesting…' : 'Run digest'}
+                    {digesting ? t('capture.digesting') : t('capture.runDigest')}
                   </button>
                 )}
 
@@ -333,12 +331,12 @@ export function CaptureView({ openView }: { openView: OpenView }) {
                   <div className="digest-result">
                     <div className="digest-result-head">
                       <Icon name="check" size={13} />
-                      <span>Draft generated</span>
+                      <span>{t('capture.draftGenerated')}</span>
                     </div>
                     <strong>{draft.title}</strong>
-                    <p>{draft.summary || 'No summary returned.'}</p>
+                    <p>{draft.summary || t('capture.noSummary')}</p>
                     <div className="digest-meta">
-                      <Tag>{draft.category || 'uncategorized'}</Tag>
+                      <Tag>{draft.category || t('home.uncategorized')}</Tag>
                       <span>v{draft.version}</span>
                       <span>{formatDateTime(draft.updated_at)}</span>
                     </div>
@@ -346,10 +344,10 @@ export function CaptureView({ openView }: { openView: OpenView }) {
                       type="button"
                       className="button primary full"
                       onClick={() =>
-                        openView('draft', { id: draft.id, title: draft.title }, 'Draft')
+                        openView('draft', { id: draft.id, title: draft.title }, t('tabs.draft'))
                       }
                     >
-                      Open draft
+                      {t('capture.openDraft')}
                       <Icon name="arrow-up-right" size={12} />
                     </button>
                   </div>
@@ -360,10 +358,7 @@ export function CaptureView({ openView }: { openView: OpenView }) {
             {!result && (
               <div className="aside-note">
                 <Icon name="terminal" size={13} />
-                <p>
-                  Capture is non-destructive. Raw inputs remain available after a draft is
-                  generated and published.
-                </p>
+                <p>{t('capture.note')}</p>
               </div>
             )}
           </aside>

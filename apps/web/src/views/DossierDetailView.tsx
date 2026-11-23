@@ -26,6 +26,7 @@ import type {
   OpenView,
 } from '../types'
 import { cx, shortId, sortAssetsNewest } from '../utils'
+import { useI18n } from '../i18n'
 
 const NODE_WIDTH = 184
 const NODE_HEIGHT = 138
@@ -98,6 +99,7 @@ export function DossierDetailView({
   openView: OpenView
 }) {
   const { notify } = useToast()
+  const { t } = useI18n()
   const { data, loading, error, reload, setData } = useAsyncData<DossierDetailData>(
     (signal) => api.dossier(dossierId, signal),
     [dossierId],
@@ -203,7 +205,7 @@ export function DossierDetailView({
     setActionError(null)
     try {
       const created = await api.createPage(data.dossier.id)
-      notify('Page created from dossier.', 'success')
+      notify(t('dossier.toastPageCreated'), 'success')
       openView('page', { id: created.page.id }, created.page.title)
     } catch (caught) {
       setActionError(errorMessage(caught))
@@ -216,7 +218,7 @@ export function DossierDetailView({
   const handleAdded = (response: DossierAssetResponse) => {
     setData(response)
     setAddOpen(false)
-    notify(`${response.cards.length} cards in dossier.`, 'success')
+    notify(t('dossier.toastAddedCount', { count: response.cards.length }), 'success')
   }
 
   if (loading && !data) {
@@ -235,9 +237,9 @@ export function DossierDetailView({
       <div className="view-scroll">
         <div className="view-inner">
           <ViewHeader
-            eyebrow="Wiki / Dossiers / Graph"
-            title="Dossier unavailable"
-            back={{ label: 'Dossiers', onClick: () => openView('dossiers') }}
+            eyebrow={t('dossier.eyebrow')}
+            title={t('dossier.unavailable')}
+            back={{ label: t('nav.dossiers'), onClick: () => openView('dossiers') }}
           />
           <ErrorBanner message={error} onRetry={reload} />
         </div>
@@ -255,10 +257,10 @@ export function DossierDetailView({
         <div className="view-scroll dossier-head-scroll">
           <div className="view-inner dossier-head-inner">
             <ViewHeader
-              eyebrow="Wiki / Dossiers / Graph"
+              eyebrow={t('dossier.eyebrow')}
               title={dossier.name}
-              description={dossier.description || 'No description.'}
-              back={{ label: 'Dossiers', onClick: () => openView('dossiers') }}
+              description={dossier.description || t('common.noDescription')}
+              back={{ label: t('nav.dossiers'), onClick: () => openView('dossiers') }}
             />
             {error && <ErrorBanner message={error} onRetry={reload} />}
             {actionError && (
@@ -273,28 +275,28 @@ export function DossierDetailView({
           <div className="canvas-toolbar-info">
             {immersive && (
               <span className="immersive-mark">
-                <Icon name="maximize" size={13} /> Focus
+                <Icon name="maximize" size={13} /> {t('dossier.focus')}
               </span>
             )}
-            <MicroLabel>{immersive ? dossier.name : 'Dossier graph'}</MicroLabel>
+            <MicroLabel>{immersive ? dossier.name : t('dossier.graph')}</MicroLabel>
             <span className="canvas-stat">
-              {String(data.cards.length).padStart(2, '0')} nodes
+              {String(data.cards.length).padStart(2, '0')} {t('dossier.nodes')}
               <span className="canvas-stat-divider">/</span>
-              {String(data.edges.length).padStart(2, '0')} edges
+              {String(data.edges.length).padStart(2, '0')} {t('dossier.edges')}
             </span>
             {dossier.page_id && (
               <button
                 type="button"
                 className="canvas-inline-link"
-                onClick={() => openView('page', { id: dossier.page_id as string }, 'Page')}
+                onClick={() => openView('page', { id: dossier.page_id as string }, t('tabs.page'))}
               >
-                <Icon name="page" size={11} /> Has page
+                <Icon name="page" size={11} /> {t('dossier.hasPage')}
               </button>
             )}
           </div>
           <div className="canvas-toolbar-actions">
             <button type="button" className="button ghost small" onClick={() => setAddOpen(true)}>
-              <Icon name="plus" size={12} /> Add cards
+              <Icon name="plus" size={12} /> {t('dossier.addCards')}
             </button>
             <button
               type="button"
@@ -303,15 +305,15 @@ export function DossierDetailView({
               disabled={creatingPage || data.cards.length === 0}
             >
               <Icon name="page" size={12} />
-              {creatingPage ? 'Composing…' : 'Create Page'}
+              {creatingPage ? t('common.composing') : t('dossier.createPage')}
             </button>
             {immersive ? (
               <button type="button" className="button small primary" onClick={onExitImmersive}>
-                <Icon name="minimize" size={12} /> Exit focus
+                <Icon name="minimize" size={12} /> {t('dossier.exitFocus')}
               </button>
             ) : (
               <button type="button" className="button small" onClick={onEnterImmersive}>
-                <span className="focus-glyph">⏏</span> Focus
+                <span className="focus-glyph">⏏</span> {t('dossier.focus')}
               </button>
             )}
           </div>
@@ -321,11 +323,11 @@ export function DossierDetailView({
           <div className="graph-empty">
             <EmptyState
               icon="layers"
-              title="This dossier has no cards"
-              description="Add cards to build the shared-tag graph. Edges appear automatically."
+              title={t('dossier.empty')}
+              description={t('dossier.emptyBody')}
               action={
                 <button type="button" className="button primary" onClick={() => setAddOpen(true)}>
-                  <Icon name="plus" size={13} /> Add cards
+                  <Icon name="plus" size={13} /> {t('dossier.addCards')}
                 </button>
               }
             />
@@ -390,7 +392,7 @@ export function DossierDetailView({
                     onDoubleClick={() =>
                       openView('card', { id: card.id }, card.title)
                     }
-                    title="Drag to arrange · Double-click to open card"
+                    title={t('dossier.canvasHint')}
                   >
                     <div className="graph-node-image">
                       <ArtifactImage asset={card} compact />
@@ -398,8 +400,8 @@ export function DossierDetailView({
                       <button
                         type="button"
                         className="graph-node-remove"
-                        title="Remove card from dossier"
-                        aria-label={`Remove ${card.title} from dossier`}
+                        title={t('dossier.removeCard')}
+                        aria-label={t('dossier.removeAria', { title: card.title })}
                         onPointerDown={(event) => event.stopPropagation()}
                         onClick={(event) => {
                           event.stopPropagation()
@@ -412,7 +414,7 @@ export function DossierDetailView({
                     <div className="graph-node-body">
                       <h3>{card.title}</h3>
                       <span className="graph-node-meta">
-                        {card.category || 'uncategorized'}
+                        {card.category || t('home.uncategorized')}
                       </span>
                     </div>
                   </article>
@@ -424,12 +426,12 @@ export function DossierDetailView({
 
         <div className="canvas-legend">
           <span className="legend-item">
-            <span className="legend-line" /> shared tags
+            <span className="legend-line" /> {t('dossier.legendShared')}
           </span>
           <span className="legend-item">
-            <span className="legend-node" /> card
+            <span className="legend-node" /> {t('dossier.legendCard')}
           </span>
-          <span className="legend-item legend-hint">drag nodes · double-click to inspect</span>
+          <span className="legend-item legend-hint">{t('dossier.legendHint')}</span>
         </div>
       </div>
 
@@ -469,6 +471,7 @@ function AddCardsModal({
   onAdded: (response: DossierAssetResponse) => void
 }) {
   const { notify } = useToast()
+  const { t } = useI18n()
   const { data, loading, error, reload } = useAsyncData<Asset[]>(
     (signal) => api.assets(signal),
     [],
@@ -494,7 +497,7 @@ function AddCardsModal({
     setSubmitError(null)
     try {
       const response = await api.addDossierAssets(dossierId, [...selected])
-      notify('Cards added to dossier.', 'success')
+      notify(t('dossier.toastAdded'), 'success')
       onAdded(response)
     } catch (caught) {
       setSubmitError(errorMessage(caught))
@@ -505,17 +508,17 @@ function AddCardsModal({
 
   return (
     <Modal
-      title="Add cards to dossier"
-      eyebrow="Dossier / Compose"
+      title={t('dossier.addTitle')}
+      eyebrow={t('dossier.addEyebrow')}
       width="lg"
       onClose={onClose}
       footer={
         <>
           <span className="modal-selection-count">
-            {selected.size} selected
+            {t('dossier.selectedCount', { count: selected.size })}
           </span>
           <button type="button" className="button ghost" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -523,7 +526,7 @@ function AddCardsModal({
             disabled={submitting || selected.size === 0}
             onClick={submit}
           >
-            {submitting ? 'Adding…' : `Add ${selected.size || ''} cards`.trim()}
+            {submitting ? t('common.adding') : t('dossier.addCount', { count: selected.size })}
           </button>
         </>
       }
@@ -542,8 +545,8 @@ function AddCardsModal({
       {!loading && assets.length === 0 && (
         <EmptyState
           icon="layers"
-          title="No cards available"
-          description="Publish a draft to create a card, then add it to this dossier."
+          title={t('dossier.noCards')}
+          description={t('dossier.noCardsBody')}
           compact
         />
       )}
@@ -572,11 +575,11 @@ function AddCardsModal({
                 <span className="asset-pick-copy">
                   <strong>{asset.title}</strong>
                   <span>
-                    {asset.category || 'uncategorized'} · {asset.tags.slice(0, 3).join(', ') || 'no tags'}
+                    {asset.category || t('home.uncategorized')} · {asset.tags.slice(0, 3).join(', ') || t('dossier.noTags')}
                   </span>
                 </span>
-                {already && <Tag tone="muted">in dossier</Tag>}
-                {asset.archived && !already && <Tag tone="muted">archived</Tag>}
+                {already && <Tag tone="muted">{t('dossier.inDossier')}</Tag>}
+                {asset.archived && !already && <Tag tone="muted">{t('common.archived')}</Tag>}
               </label>
             )
           })}
@@ -598,6 +601,7 @@ function RemoveCardModal({
   onRemoved: () => void
 }) {
   const { notify } = useToast()
+  const { t } = useI18n()
   const [removing, setRemoving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -606,7 +610,7 @@ function RemoveCardModal({
     setError(null)
     try {
       await api.removeDossierAsset(dossierId, asset.id)
-      notify('Card removed from dossier.', 'success')
+      notify(t('dossier.cardRemoved'), 'success')
       onRemoved()
     } catch (caught) {
       setError(errorMessage(caught))
@@ -617,14 +621,14 @@ function RemoveCardModal({
 
   return (
     <Modal
-      title="Remove card"
-      eyebrow="Dossier / Detach"
+      title={t('dossier.detachTitle')}
+      eyebrow={t('dossier.detachEyebrow')}
       width="sm"
       onClose={onClose}
       footer={
         <>
           <button type="button" className="button ghost" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -632,15 +636,12 @@ function RemoveCardModal({
             disabled={removing}
             onClick={remove}
           >
-            {removing ? 'Removing…' : 'Remove from dossier'}
+            {removing ? t('dossier.removing') : t('dossier.remove')}
           </button>
         </>
       }
     >
-      <p className="modal-copy">
-        Remove <strong>{asset.title}</strong> from this dossier? The underlying card and its
-        artifact will not be deleted.
-      </p>
+      <p className="modal-copy">{t('dossier.removeConfirm', { title: asset.title })}</p>
       {error && <ErrorBanner message={error} />}
     </Modal>
   )

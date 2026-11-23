@@ -9,6 +9,7 @@ import {
 } from 'react'
 import type { ToastMessage } from '../types'
 import { Icon } from './Icon'
+import { useI18n } from '../i18n'
 
 type ToastTone = ToastMessage['tone']
 
@@ -19,6 +20,7 @@ interface ToastApi {
 const ToastContext = createContext<ToastApi | null>(null)
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const { t } = useI18n()
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const nextId = useRef(0)
   const timers = useRef<Map<number, number>>(new Map())
@@ -60,7 +62,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <button
               type="button"
               className="icon-button toast-close"
-              aria-label="Dismiss notification"
+              aria-label={t('component.dismissNotification')}
               onClick={() => dismiss(toast.id)}
             >
               <Icon name="x" size={12} />
