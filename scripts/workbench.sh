@@ -79,6 +79,46 @@ process = subprocess.Popen(
 open(os.environ["PIDFILE"], "w").write(str(process.pid))' "$@"
 }
 
+
+worker_snapshot() {
+  curl -fsS "$API_URL/api/v1/rag/runtime/worker" 2>/dev/null
+}
+
+worker_ready() {
+  local snapshot
+  snapshot="$(worker_snapshot)" || return 1
+  printf '%s' "$snapshot" | python3 -c 'import json, sys
+try:
+    data = json.load(sys.stdin)
+except (TypeError, ValueError):
+    raise SystemExit(1)
+raise SystemExit(0 if data.get("available") is True and data.get("expired") is False else 1)'
+}
+
+worker_status() {
+  local snapshot
+  if ! snapshot="$(worker_snapshot)"; then
+    printf 'offline (api unavailable)'
+    return
+  fi
+  printf '%s' "$snapshot" | python3 -c 'import json, sys
+try:
+    data = json.load(sys.stdin)
+except (TypeError, ValueError):
+    print("offline (invalid runtime response)")
+    raise SystemExit(0)
+if data.get("available") is not True or data.get("expired") is True:
+    reason = data.get("reason_code") or "not_ready"
+    print(f"offline ({reason})")
+    raise SystemExit(0)
+state = data.get("state") or "idle"
+job = data.get("current_job_id")
+label = "running" if state == "busy" or job else "idle"
+pid = data.get("pid")
+suffix = f", job {job}" if job else ""
+print(f"ready/{label} (pid {pid}{suffix})" if pid else f"ready/{label}{suffix}")'
+}
+
 start_api() {
   if pid_alive "$RUN_DIR/api.pid"; then
     say "api: already running (pid $(cat "$RUN_DIR/api.pid"))"
@@ -100,22 +140,30 @@ start_api() {
 
 start_worker() {
   if pid_alive "$RUN_DIR/worker.pid"; then
-    say "worker: already running (pid $(cat "$RUN_DIR/worker.pid"))"
-    return
+    local existing_pid; existing_pid="$(cat "$RUN_DIR/worker.pid")"
+    if worker_ready; then
+      say "worker: already running (pid $existing_pid)"
+      return
+    fi
+    say "worker: process exists (pid $existing_pid) but runtime is not ready"
+    say "worker status: $(worker_status)"
+    tail -20 "$RUN_DIR/worker.log" >&2 || true
+    fail "worker process exists but heartbeat/runtime is not ready"
   fi
   [ -x "$API_DIR/.venv/bin/python" ] || fail "API venv missing; install dependencies first"
   rm -f "$RUN_DIR/worker.heartbeat"
   say "worker: starting"
   ( cd "$API_DIR" && spawn_detached worker .venv/bin/python -m app.workers.rag_worker )
-  for _ in $(seq 1 20); do
-    if pid_alive "$RUN_DIR/worker.pid"; then
-      say "worker: ready"
+  for _ in $(seq 1 40); do
+    if pid_alive "$RUN_DIR/worker.pid" && worker_ready; then
+      say "worker: ready (pid $(cat "$RUN_DIR/worker.pid"))"
       return
     fi
     sleep 0.5
   done
+  say "worker status: $(worker_status)"
   tail -20 "$RUN_DIR/worker.log" >&2 || true
-  fail "worker did not start"
+  fail "worker did not become ready (runtime/heartbeat check failed)"
 }
 
 start_web() {
@@ -160,6 +208,10 @@ stop_service() {
   rm -f "$file"
 }
 
+stop_worker() {
+  stop_service worker "$RUN_DIR/worker.pid" "" 150
+}
+
 stop_pg() {
   if pg_ready; then
     say "postgres: stopping"
@@ -177,11 +229,12 @@ cmd_start() {
   say "Workbench is ready:"
   say "  Web: $WEB_URL"
   say "  API: $API_URL/docs"
+  say "  Worker: managed by workbench.sh"
   say "  Health: $API_URL/health"
 }
 
 cmd_stop() {
-  stop_service worker "$RUN_DIR/worker.pid" "" 150
+  stop_worker
   stop_service web "$RUN_DIR/web.pid" "$WEB_PORT"
   stop_service api "$RUN_DIR/api.pid" "$API_PORT"
   if [ "${1:-}" = "--all" ] || [ "${1:-}" = "all" ]; then
@@ -192,18 +245,23 @@ cmd_stop() {
 }
 
 cmd_status() {
-  printf 'postgres : '
-  if pg_ready; then printf 'ready\n'; else printf 'down\n'; fi
-  printf 'api      : '
-  if curl -fsS "$API_URL/health" 2>/dev/null; then printf '\n'; else printf 'down\n'; fi
-  printf 'worker   : '
-  if pid_alive "$RUN_DIR/worker.pid"; then
-    printf 'ready (pid %s)\n' "$(cat "$RUN_DIR/worker.pid")"
+  local pg_state="down" api_state="offline" web_state="offline" worker_state workbench_state
+  if pg_ready; then pg_state="ready"; fi
+  if curl -fsS "$API_URL/health" >/dev/null 2>&1; then api_state="ready"; fi
+  worker_state="$(worker_status)"
+  if curl -fsS "$WEB_URL" >/dev/null 2>&1; then web_state="ready"; fi
+  printf 'postgres : %s\n' "$pg_state"
+  printf 'api      : %s\n' "$api_state"
+  printf 'worker   : %s\n' "$worker_state"
+  printf 'web      : %s\n' "$web_state"
+  if [ "$pg_state" = "ready" ] && [ "$api_state" = "ready" ] && [ "$web_state" = "ready" ] && [[ "$worker_state" == ready/* ]]; then
+    workbench_state="ready"
+  elif [ "$pg_state" = "ready" ] && [ "$api_state" = "ready" ] && [ "$web_state" = "ready" ]; then
+    workbench_state="degraded"
   else
-    printf 'down\n'
+    workbench_state="offline"
   fi
-  printf 'web      : '
-  if curl -fsS "$WEB_URL" >/dev/null 2>&1; then printf 'ready (%s)\n' "$WEB_URL"; else printf 'down\n'; fi
+  printf '\nworkbench: %s\n' "$workbench_state"
 }
 
 cmd_logs() {
@@ -216,7 +274,9 @@ case "${1:-start}" in
   stop) shift; cmd_stop "${1:-}" ;;
   restart) cmd_stop; sleep 1; cmd_start ;;
   status) cmd_status ;;
+  start-worker|worker-start) start_worker ;;
+  stop-worker|worker-stop) stop_worker ;;
   url) say "$WEB_URL" ;;
   logs) shift; cmd_logs "${1:-api}" ;;
-  *) fail "usage: $0 {start|stop [--all]|restart|status|url|logs [api|worker|web|postgres]}" ;;
+  *) fail "usage: $0 {start|stop [--all]|restart|status|start-worker|stop-worker|url|logs [api|worker|web|postgres]}" ;;
 esac

@@ -30,9 +30,25 @@ cd services/api && python3.15 -m venv .venv && .venv/bin/pip install -e '.[dev]'
 
 # 3) 状态与停止
 ./scripts/workbench.sh status
-./scripts/workbench.sh stop          # 停止 API/Web，保留 PostgreSQL
+./scripts/workbench.sh stop          # 停止 API/Worker/Web，保留 PostgreSQL
 ./scripts/workbench.sh stop --all
 ```
+
+## 本地服务生命周期
+
+`workbench.sh start` 统一启动 PostgreSQL、API、RAG Worker 和 Vite；Worker 使用
+`.run/worker.heartbeat` 与 `/api/v1/rag/runtime/worker` 做就绪判断，不再只检查
+PID。Worker 未就绪或 heartbeat 过期时，`status` 会报告 `degraded`，不会误报
+Workbench ready。
+
+```bash
+./scripts/workbench.sh status
+./scripts/workbench.sh start-worker   # 仅启动/确认 Worker
+./scripts/workbench.sh stop-worker    # 仅停止 Worker
+```
+
+默认 `stop` 停止 Worker、API、Web 并保留 PostgreSQL；PostgreSQL 可被其他本地
+工作流共享，只有 `stop --all` 才停止它。
 
 ## 当前能力（P1.M1）
 
@@ -44,7 +60,7 @@ cd services/api && python3.15 -m venv .venv && .venv/bin/pip install -e '.[dev]'
 - **Web Workbench**：三栏 IDE 式界面（Context Directory / Focused Artifact / AI Chat）、Artifact Tabs、Dossier Canvas、Card Masonry、Page Reader、沉浸式 Canvas。
 - **Global i18n**：Header 右侧提供 zh-CN / en-US 即时切换；默认中文，语言偏好持久化，刷新或重新打开后保持；日期与相对时间随语言本地化。
 - **AI Chat**：对话历史与上下文建议；当前回复由本地规则生成，不调用外部模型。
-- **运维脚本**：统一启动/停止/状态；备份与恢复脚本。
+- **运维脚本**：统一启动/停止/状态，包含 RAG Worker 生命周期；备份与恢复脚本。
 
 ## 近期工程成果（独立于 P1.M1）
 
