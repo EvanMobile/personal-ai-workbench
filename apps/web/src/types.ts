@@ -221,6 +221,9 @@ export type ViewKind =
   | 'pages'
   | 'page'
   | 'draft'
+  | 'rag-dossiers'
+  | 'rag-dossier'
+  | 'rag-run'
   | 'project-replay'
   | 'arsenal'
 

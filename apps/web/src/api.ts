@@ -69,10 +69,11 @@ interface RequestOptions {
   method?: string
   body?: unknown
   signal?: AbortSignal
+  headers?: Record<string, string>
 }
 
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, signal } = options
+export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { method = 'GET', body, signal, headers } = options
   let response: Response
 
   try {
@@ -80,10 +81,11 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       method,
       headers:
         body instanceof FormData
-          ? undefined
-          : body !== undefined
-            ? { 'Content-Type': 'application/json' }
-            : undefined,
+          ? headers
+          : {
+              ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+              ...(headers ?? {}),
+            },
       body:
         body === undefined
           ? undefined

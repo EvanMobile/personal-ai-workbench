@@ -13,6 +13,9 @@ const kindIcon: Record<ViewKind, IconName> = {
   pages: 'book',
   page: 'page',
   draft: 'file',
+  'rag-dossiers': 'database',
+  'rag-dossier': 'database',
+  'rag-run': 'activity',
   'project-replay': 'terminal',
   arsenal: 'layers',
 }

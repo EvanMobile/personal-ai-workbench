@@ -16,6 +16,7 @@ interface AsyncState<T> {
 export function useAsyncData<T>(
   load: (signal: AbortSignal) => Promise<T>,
   key: readonly unknown[] = [],
+  formatError: (error: unknown) => string = errorMessage,
 ): AsyncState<T> {
   const [data, setData] = useState<T | null>(null)
   const [loading, setLoading] = useState(true)
@@ -39,7 +40,7 @@ export function useAsyncData<T>(
       .catch((caught: unknown) => {
         if (!active) return
         if (caught instanceof DOMException && caught.name === 'AbortError') return
-        setError(errorMessage(caught))
+        setError(formatError(caught))
         setLoading(false)
       })
 

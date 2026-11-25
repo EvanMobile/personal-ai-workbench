@@ -29,6 +29,9 @@ import { HomeView } from './views/HomeView'
 import { PageReaderView } from './views/PageReaderView'
 import { PagesView } from './views/PagesView'
 import { PlaceholderView } from './views/PlaceholderView'
+import { RagDossiersView } from './views/rag/RagDossiersView'
+import { RagDossierView } from './views/rag/RagDossierView'
+import { RagRunView } from './views/rag/RagRunView'
 
 const TAB_STORAGE_KEY = 'paw.workspace.tabs.v1'
 const LAYOUT_STORAGE_KEY = 'paw.workspace.layout.v1'
@@ -65,6 +68,9 @@ const VIEW_KINDS = new Set<ViewKind>([
   'pages',
   'page',
   'draft',
+  'rag-dossiers',
+  'rag-dossier',
+  'rag-run',
   'project-replay',
   'arsenal',
 ])
@@ -75,6 +81,7 @@ const SINGLETON_VIEWS = new Set<ViewKind>([
   'cards',
   'dossiers',
   'pages',
+  'rag-dossiers',
   'project-replay',
   'arsenal',
 ])
@@ -104,6 +111,12 @@ function defaultTitle(
       return params?.title ? `${t('tabs.page')} · ${params.title}` : t('tabs.page')
     case 'draft':
       return t('tabs.draft')
+    case 'rag-dossiers':
+      return t('tabs.ragDossiers')
+    case 'rag-dossier':
+      return t('tabs.ragDossier')
+    case 'rag-run':
+      return t('tabs.ragRun')
     case 'project-replay':
       return t('tabs.projectReplay')
     case 'arsenal':
@@ -221,6 +234,12 @@ export default function App() {
         return t('tabs.pages')
       case 'draft':
         return t('tabs.draft')
+      case 'rag-dossiers':
+        return t('tabs.ragDossiers')
+      case 'rag-dossier':
+        return tab.title || t('tabs.ragDossier')
+      case 'rag-run':
+        return t('tabs.ragRun')
       case 'project-replay':
         return t('tabs.projectReplay')
       case 'arsenal':
@@ -652,6 +671,20 @@ function renderTab(
       ) : (
         <MissingTarget openView={openView} kind="draft" />
       )
+    case 'rag-dossiers':
+      return <RagDossiersView openView={openView} />
+    case 'rag-dossier':
+      return id ? (
+        <RagDossierView dossierId={id} openView={openView} />
+      ) : (
+        <MissingTarget openView={openView} kind="rag-dossier" />
+      )
+    case 'rag-run':
+      return id ? (
+        <RagRunView runId={id} openView={openView} />
+      ) : (
+        <MissingTarget openView={openView} kind="rag-run" />
+      )
     case 'project-replay':
       return <PlaceholderView kind="project-replay" openView={openView} />
     case 'arsenal':
@@ -665,7 +698,7 @@ function MissingTarget({
   kind,
   openView,
 }: {
-  kind: 'card' | 'dossier' | 'page' | 'draft'
+  kind: 'card' | 'dossier' | 'page' | 'draft' | 'rag-dossier' | 'rag-run'
   openView: OpenView
 }) {
   const { t } = useI18n()
@@ -674,6 +707,8 @@ function MissingTarget({
     dossier: 'tabs.dossier',
     page: 'tabs.page',
     draft: 'tabs.draft',
+    'rag-dossier': 'tabs.ragDossier',
+    'rag-run': 'tabs.ragRun',
   } as const
   return (
     <div className="view-scroll">

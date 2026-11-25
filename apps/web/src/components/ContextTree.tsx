@@ -19,6 +19,7 @@ export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps
   const { t } = useI18n()
   const [replayOpen, setReplayOpen] = useState(false)
   const [arsenalOpen, setArsenalOpen] = useState(false)
+  const [ragOpen, setRagOpen] = useState(true)
   const [wikiOpen, setWikiOpen] = useState(true)
 
   const openProduct = (kind: 'project-replay' | 'arsenal', title: string) => {
@@ -61,6 +62,47 @@ export function ContextTree({ activeTab, openView, apiStatus }: ContextTreeProps
             </span>
             <span className="tree-label">{t('nav.overview')}</span>
           </button>
+
+          <div className="tree-group">
+            <div className="tree-row tree-row-product">
+              <button
+                type="button"
+                className="tree-chevron-button"
+                aria-label={ragOpen ? t('nav.collapseRag') : t('nav.expandRag')}
+                aria-expanded={ragOpen}
+                onClick={() => setRagOpen((value) => !value)}
+              >
+                <Icon name={ragOpen ? 'chevron-down' : 'chevron-right'} size={11} />
+              </button>
+              <button
+                type="button"
+                className={cx(
+                  'tree-product-label',
+                  activeTab?.kind.startsWith('rag-') && 'active',
+                )}
+                onClick={() => {
+                  setRagOpen(true)
+                  openView('rag-dossiers', undefined, t('nav.ragLab'))
+                }}
+                title={t('nav.openRag')}
+              >
+                <span className="tree-icon">
+                  <Icon name="database" size={13} />
+                </span>
+                <span className="tree-label">{t('nav.ragLab')}</span>
+              </button>
+            </div>
+            {ragOpen && (
+              <div className="tree-subtree">
+                <TreeLeaf
+                  icon="database"
+                  label={t('nav.ragDossiers')}
+                  active={activeTab?.kind.startsWith('rag-') ?? false}
+                  onClick={() => openView('rag-dossiers')}
+                />
+              </div>
+            )}
+          </div>
 
           <div className="tree-group">
             <div className="tree-row tree-row-product">
