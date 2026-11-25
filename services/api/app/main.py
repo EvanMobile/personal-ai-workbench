@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
@@ -16,6 +17,12 @@ from app.api.v1.dossier.router import router as dossier_router
 from app.api.v1.dingtalk.router import router as dingtalk_router
 from app.api.v1.knowledge.router import router as knowledge_router
 from app.api.v1.page.router import router as page_router
+from app.api.v1.rag.errors import (
+    RagAPIError,
+    rag_api_error_handler,
+    rag_request_validation_handler,
+)
+from app.api.v1.rag.router import router as rag_router
 from app.core.config import ensure_data_dirs, get_settings
 from app.core.db import SessionLocal
 
@@ -49,6 +56,10 @@ app.include_router(page_router)
 app.include_router(artifact_router)
 app.include_router(chat_router)
 app.include_router(dingtalk_router)
+app.include_router(rag_router)
+
+app.add_exception_handler(RagAPIError, rag_api_error_handler)
+app.add_exception_handler(RequestValidationError, rag_request_validation_handler)
 
 
 def _database_ok() -> bool:

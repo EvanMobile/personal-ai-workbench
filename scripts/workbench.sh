@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Personal AI Workbench - start / stop / status for PostgreSQL, API and Web.
+# Personal AI Workbench - start / stop / status for PostgreSQL, API, Worker and Web.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -98,6 +98,26 @@ start_api() {
   fail "api did not become ready"
 }
 
+start_worker() {
+  if pid_alive "$RUN_DIR/worker.pid"; then
+    say "worker: already running (pid $(cat "$RUN_DIR/worker.pid"))"
+    return
+  fi
+  [ -x "$API_DIR/.venv/bin/python" ] || fail "API venv missing; install dependencies first"
+  rm -f "$RUN_DIR/worker.heartbeat"
+  say "worker: starting"
+  ( cd "$API_DIR" && spawn_detached worker .venv/bin/python -m app.workers.rag_worker )
+  for _ in $(seq 1 20); do
+    if pid_alive "$RUN_DIR/worker.pid"; then
+      say "worker: ready"
+      return
+    fi
+    sleep 0.5
+  done
+  tail -20 "$RUN_DIR/worker.log" >&2 || true
+  fail "worker did not start"
+}
+
 start_web() {
   if pid_alive "$RUN_DIR/web.pid"; then
     say "web: already running (pid $(cat "$RUN_DIR/web.pid"))"
@@ -123,12 +143,12 @@ start_web() {
 }
 
 stop_service() {
-  local name="$1" file="$2" port="${3:-}"
+  local name="$1" file="$2" port="${3:-}" wait_loops="${4:-20}"
   if pid_alive "$file"; then
     local pid; pid="$(cat "$file")"
     pkill -TERM -P "$pid" 2>/dev/null || true
     kill -TERM "$pid" 2>/dev/null || true
-    for _ in $(seq 1 20); do
+    for _ in $(seq 1 "$wait_loops"); do
       kill -0 "$pid" 2>/dev/null || break
       sleep 0.2
     done
@@ -151,6 +171,7 @@ cmd_start() {
   start_pg
   ensure_db
   start_api
+  start_worker
   start_web
   say ""
   say "Workbench is ready:"
@@ -160,6 +181,7 @@ cmd_start() {
 }
 
 cmd_stop() {
+  stop_service worker "$RUN_DIR/worker.pid" "" 150
   stop_service web "$RUN_DIR/web.pid" "$WEB_PORT"
   stop_service api "$RUN_DIR/api.pid" "$API_PORT"
   if [ "${1:-}" = "--all" ] || [ "${1:-}" = "all" ]; then
@@ -174,6 +196,12 @@ cmd_status() {
   if pg_ready; then printf 'ready\n'; else printf 'down\n'; fi
   printf 'api      : '
   if curl -fsS "$API_URL/health" 2>/dev/null; then printf '\n'; else printf 'down\n'; fi
+  printf 'worker   : '
+  if pid_alive "$RUN_DIR/worker.pid"; then
+    printf 'ready (pid %s)\n' "$(cat "$RUN_DIR/worker.pid")"
+  else
+    printf 'down\n'
+  fi
   printf 'web      : '
   if curl -fsS "$WEB_URL" >/dev/null 2>&1; then printf 'ready (%s)\n' "$WEB_URL"; else printf 'down\n'; fi
 }
@@ -190,5 +218,5 @@ case "${1:-start}" in
   status) cmd_status ;;
   url) say "$WEB_URL" ;;
   logs) shift; cmd_logs "${1:-api}" ;;
-  *) fail "usage: $0 {start|stop [--all]|restart|status|url|logs [api|web|postgres]}" ;;
+  *) fail "usage: $0 {start|stop [--all]|restart|status|url|logs [api|worker|web|postgres]}" ;;
 esac
