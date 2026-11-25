@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "check:i18n": "node --experimental-strip-types --test scripts/check-i18n.mjs",
     "check:rag-i18n": "node --experimental-strip-types --test scripts/check-rag-i18n.mjs",
+    "check:chat-commands": "node --experimental-strip-types --test scripts/check-chat-commands.mjs",
     "check:rag-polling": "node --experimental-strip-types --test scripts/check-rag-polling.mjs"
   },
   "dependencies": {

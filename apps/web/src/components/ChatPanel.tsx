@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, errorMessage } from '../api'
+import { isDingTalkTestCommand, resolveChatSubmission } from '../chatCommands'
 import type {
   ChatMessage,
   ChatSuggestion,
@@ -111,7 +112,6 @@ export function ChatPanel({
   const [creating, setCreating] = useState(false)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
-  const [dingtalkInput, setDingtalkInput] = useState('')
   const [dingtalkSending, setDingtalkSending] = useState(false)
   const [dingtalkResult, setDingtalkResult] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
   const [suggestions, setSuggestions] = useState<ChatSuggestion[]>([])
@@ -220,10 +220,31 @@ export function ChatPanel({
     }
   }
 
+  const sendDingTalkTest = async (content: string) => {
+    if (!content || dingtalkSending || sending) return
+    setDingtalkSending(true)
+    setDingtalkResult(null)
+    try {
+      await api.sendDingTalkMessage(content)
+      setDingtalkResult({ kind: 'success', text: t('chat.dingtalkSuccess') })
+      setInput('')
+    } catch (caught) {
+      setDingtalkResult({ kind: 'error', text: errorMessage(caught) })
+    } finally {
+      setDingtalkSending(false)
+    }
+  }
+
   const send = async (event: FormEvent) => {
     event.preventDefault()
-    const content = input.trim()
-    if (!content || !activeId || sending) return
+    const submission = resolveChatSubmission(input)
+    if (!submission || sending || dingtalkSending) return
+    if (submission.kind === 'dingtalk') {
+      await sendDingTalkTest(submission.content)
+      return
+    }
+    if (!activeId) return
+    const content = submission.content
     setSending(true)
     setThreadError(null)
     setPendingSuggestion(null)
@@ -254,26 +275,6 @@ export function ChatPanel({
       setSending(false)
     }
   }
-
-  const sendDingTalk = async (event: FormEvent) => {
-    event.preventDefault()
-    const content = dingtalkInput.trim()
-    if (!content || dingtalkSending) return
-    setDingtalkSending(true)
-    setDingtalkResult(null)
-    try {
-      await api.sendDingTalkMessage(content)
-      setDingtalkResult({ kind: 'success', text: t('chat.dingtalkSuccess') })
-    } catch (caught) {
-      setDingtalkResult({ kind: 'error', text: errorMessage(caught) })
-    } finally {
-      setDingtalkSending(false)
-    }
-  }
-
-  useEffect(() => {
-    if (!dingtalkInput) setDingtalkInput(t('chat.dingtalkDefault'))
-  }, [dingtalkInput, t])
 
   const activeConversation = conversations.find((item) => item.id === activeId) ?? null
 
@@ -412,37 +413,6 @@ export function ChatPanel({
       </div>
 
       <div className="chat-compose">
-        <section className="dingtalk-test" aria-label={t('chat.dingtalkTitle')}>
-          <div className="dingtalk-test-head">
-            <MicroLabel>{t('chat.dingtalkTitle')}</MicroLabel>
-            <span>{t('chat.dingtalkGroup')}</span>
-          </div>
-          <form className="dingtalk-test-form" onSubmit={sendDingTalk}>
-            <textarea
-              className="chat-input dingtalk-input"
-              value={dingtalkInput}
-              onChange={(event) => setDingtalkInput(event.target.value)}
-              rows={2}
-              maxLength={2000}
-              disabled={dingtalkSending}
-              aria-label={t('chat.dingtalkMessage')}
-            />
-            <button
-              type="submit"
-              className="button small primary dingtalk-send"
-              disabled={dingtalkSending || !dingtalkInput.trim()}
-              aria-label={dingtalkSending ? t('chat.dingtalkSending') : t('chat.dingtalkSend')}
-            >
-              <Icon name={dingtalkSending ? 'refresh' : 'send'} size={12} />
-              {dingtalkSending ? t('chat.dingtalkSending') : t('chat.dingtalkSend')}
-            </button>
-          </form>
-          {dingtalkResult && (
-            <div className={`dingtalk-result dingtalk-result-${dingtalkResult.kind}`} role="status" aria-live="polite">
-              {dingtalkResult.text}
-            </div>
-          )}
-        </section>
         {suggestionsError && (
           <div className="suggestion-error">
             <Icon name="alert" size={11} />
@@ -491,6 +461,15 @@ export function ChatPanel({
           />
         )}
 
+        {dingtalkResult && (
+          <div
+            className={`dingtalk-result dingtalk-result-${dingtalkResult.kind}`}
+            role="status"
+            aria-live="polite"
+          >
+            {dingtalkResult.text}
+          </div>
+        )}
         <form className="chat-input-row" onSubmit={send}>
           <textarea
             className="chat-input"
@@ -506,12 +485,17 @@ export function ChatPanel({
               activeId ? t('chat.placeholder') : t('chat.placeholderNoConversation')
             }
             rows={2}
-            disabled={!activeId || sending}
+            disabled={sending || dingtalkSending}
           />
           <button
             type="submit"
             className="chat-send"
-            disabled={!activeId || sending || !input.trim()}
+            disabled={
+              sending ||
+              dingtalkSending ||
+              !input.trim() ||
+              (!activeId && !isDingTalkTestCommand(input))
+            }
             aria-label={t('chat.send')}
           >
             <Icon name={sending ? 'refresh' : 'send'} size={15} />

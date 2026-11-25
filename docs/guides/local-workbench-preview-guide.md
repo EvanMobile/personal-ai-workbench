@@ -444,7 +444,7 @@ rm -rf services/api/.data
 - PDF / Word / 图片 / 视频：**不支持**；上传会返回 415（当前仅文本类文件）。
 - 真实外部 LLM：**未启用**。
 - RAG / Embedding / pgvector / Vector DB：**未实现**。
-- Android / 钉钉：**未实现**。
+- Android 客户端：**未实现**。钉钉已提供右侧 AI Chat 区域的手动群机器人消息测试入口，并完成真实消息送达验收；面向任务状态和结果的 Android / DingTalk Showcase 流程仍未实现。
 - 自动 Publish：**不存在**；必须人工确认。
 - Page 自动跟随 Dossier 更新：**不会**。
 - 多模型选择 / 推荐 / 路由：**未实现**；接口不绑定具体模型。
